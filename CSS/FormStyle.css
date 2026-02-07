@@ -1,0 +1,177 @@
+/* =========================================
+   إعدادات عامة (Global Reset)
+   ========================================= */
+   * {
+    box-sizing: border-box; /* يمنع الحواف من زيادة عرض العنصر */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f2f2f2;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* خط أجمل */
+    direction: rtl; /* لضمان اتجاه النص للعربية */
+    line-height: 1.6;
+}
+
+/* =========================================
+   الحاوية الرئيسية (Container)
+   ========================================= */
+.container {
+    width: 95%; /* للجوال: تأخذ 95% من عرض الشاشة */
+    max-width: 700px; /* للكمبيوتر: لا تتجاوز 700 بكسل */
+    margin: 20px auto; /* مسافة من الأعلى والأسفل */
+    background-color: #fff;
+    padding: 20px; /* تقليل الهوامش الداخلية قليلاً للجوال */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* ظل خفيف للجمالية */
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+    font-size: 24px;
+}
+
+/* =========================================
+   الحقول والعناصر (Inputs & Elements)
+   ========================================= */
+fieldset {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #fafafa;
+}
+
+legend {
+    padding: 0 10px;
+    font-weight: bold;
+    color: #555;
+    font-size: 1.1em;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #444;
+}
+
+/* توحيد تنسيق جميع المدخلات */
+input,
+textarea,
+select {
+    width: 100%; /* عرض كامل لتسهيل الاستخدام على الجوال */
+    padding: 12px; /* تكبير المساحة للمس */
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px; /* خط مريح للقراءة */
+    outline: none;
+    transition: border 0.3s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #007bff; /* تلوين الإطار عند الكتابة */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+/* =========================================
+   الأزرار (Buttons)
+   ========================================= */
+button {
+    width: 100%; /* للجوال: الزر بعرض كامل الشاشة */
+    margin-top: 20px;
+    padding: 14px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* أزرار خاصة */
+.btn-check,
+.Rest {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.next-btn {
+    display: flex; /* تحسين المحاذاة */
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.next-btn .arrow {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* ألوان إضافية للأزرار (اختياري) */
+.btn-delete {
+    background-color: #dc3545; /* أحمر للحذف */
+    margin-top: 10px;
+}
+.btn-delete:hover { background-color: #c82333; }
+
+.btn-add {
+    background-color: #28a745; /* أخضر للإضافة */
+}
+.btn-add:hover { background-color: #218838; }
+/* =========================================
+   إعدادات التنقل بين الأقسام (Wizard)
+   ========================================= */
+
+/* إخفاء جميع الأقسام بشكل افتراضي */
+.form-section {
+  display: none;
+  animation: fadeIn 0.5s; /* تأثير ظهور ناعم */
+}
+
+/* إظهار القسم النشط فقط */
+.active-section {
+  display: block;
+}
+
+/* تأثير الحركة */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   تعديلات للشاشات الكبيرة (Media Queries)
+   ========================================= */
+@media (min-width: 600px) {
+    /* هذه التنسيقات ستعمل فقط على التابلت والكمبيوتر */
+    
+    button {
+        width: auto; /* الزر يأخذ حجمه الطبيعي ولا يمتد */
+        min-width: 200px; /* ولكن لا يقل عن 200 بكسل */
+        display: block;
+        margin-left: auto;
+        margin-right: auto; /* توسيط الزر */
+    }
+
+    .container {
+        padding: 40px; /* زيادة المساحة الداخلية في الشاشات الكبيرة */
+    }
+}

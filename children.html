@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بيانات الأبناء</title>
+    <link rel="stylesheet" href="CSS/FormStyle.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>بيانات الأبناء</h2>
+
+    <label>هل يوجد أبناء للعائلة؟</label>
+    <select id="hasChildren" onchange="toggleChildren()">
+        <option value="" selected disabled>اختر</option>
+        <option value="yes">نعم</option>
+        <option value="no">لا</option>
+    </select>
+
+    <div id="childrenSection" style="display:none;">
+        <div id="childrenContainer"></div>
+        <button type="button" class="btn-add" onclick="addChild()">+ إضافة ابن</button>
+    </div>
+
+    <br>
+    <button type="button" class="btn-submit" onclick="saveAll()">حفظ ومتابعة ⬅️</button>
+</div>
+
+<script src="JS/ChildrenLogic.js"></script>
+</body>
+</html>

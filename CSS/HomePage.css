@@ -1,0 +1,116 @@
+/* إعدادات عامة */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh; /* يسمح بالتمدد إذا كان المحتوى طويلاً */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px; /* هامش خارجي صغير للجوالات */
+  /* تمت إزالة overflow: hidden للسماح بالنزول للأسفل في الشاشات الصغيرة */
+}
+
+.container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 50px 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 100%;
+  max-width: 450px; /* العرض الأقصى للكمبيوتر */
+  z-index: 1;
+}
+
+header h1 {
+  color: #2c3e50;
+  font-size: 24px; /* تكبير الخط قليلاً */
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+header p {
+  color: #7f8c8d;
+  font-size: 16px;
+  margin-bottom: 40px;
+  line-height: 1.5;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn {
+  padding: 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%; /* ضمان أن الزر يأخذ العرض الكامل */
+}
+
+.btn-new {
+  background-color: #27ae60;
+  color: white;
+}
+
+.btn-new:hover {
+  background-color: #219150;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+}
+
+.btn-update {
+  background-color: #2980b9;
+  color: white;
+}
+
+.btn-update:hover {
+  background-color: #1f6391;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3);
+}
+
+footer {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #bdc3c7;
+}
+
+/* =========================================
+   📱 إعدادات الجوال (Responsive Media Query)
+   ========================================= */
+@media (max-width: 480px) {
+  .container {
+    padding: 30px 20px; /* تقليل الحواف الداخلية لتوفير مساحة */
+    width: 100%;
+  }
+
+  header h1 {
+    font-size: 20px; /* تصغير العنوان قليلاً */
+  }
+
+  header p {
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    padding: 15px; /* تصغير حجم الزر قليلاً */
+    font-size: 16px;
+  }
+}

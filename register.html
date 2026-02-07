@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل عائلة جديدة</title>
+    <link rel="stylesheet" href="CSS/FormStyle.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>تسجيل عائلة جديدة</h2>
+        <p id="message" style="color:red; font-weight:bold;"></p>
+
+        <fieldset>
+            <legend>البيانات العامة</legend>
+
+            <label>رقم هوية الزوج</label>
+            <input type="text" id="husbandId" inputmode="numeric" pattern="\d{9}" required placeholder="ادخل رقم الهوية">
+
+            <div class="btn-check">
+                <button type="button" onclick="checkId()">تحقق من الهوية</button>
+            </div>
+
+            <div id="restForm" style="display:none;">
+                <label>اسم الزوج رباعي</label>
+                <input type="text" id="husbandName" required placeholder="ادخل اسم الزوج رباعي">
+
+                <label>تاريخ ميلاد الزوج</label>
+                <input type="date" id="husbandBirth" required placeholder="ادخل تارخ ميلاد الزوج">
+
+                <label>الحالة الاجتماعية</label>
+                <select id="status" required placeholder="ادخل الحالة  الاجتماعية للزوج">
+                    <option selected disabled value="">اختر</option>
+                    <option value="متزوج">متزوج</option>
+                    <option value="أعزب">أعزب</option>
+                    <option value="أرمل">أرمل</option>
+                    <option value="مطلق">مطلق</option>
+                </select>
+
+                <label>رقم الجوال</label>
+                <input type="text" id="phone" inputmode="numeric" required>
+
+                <label>جوال بديل</label>
+                <input type="text" id="altPhone" inputmode="numeric">
+
+                <label>هل يوجد أمراض مزمنة أو إعاقة للزوج؟</label>
+                <select id="husbandIll" required>
+                    <option selected disabled value="">اختر</option>
+                    <option value="لا">لا</option>
+                    <option value="نعم">نعم</option>
+                </select>
+
+                <label>نوع مرض الزوج (إن وجد)</label>
+                <input type="text" id="husbandIllType">
+
+                <label>اسم الزوجة رباعي</label>
+                <input type="text" id="wifeName" required>
+
+                <label>رقم هوية الزوجة</label>
+                <input type="text" id="wifeId" required>
+
+                <label>تاريخ ميلاد الزوجة</label>
+                <input type="date" id="wifeBirth" required>
+
+                <label>هل يوجد أمراض مزمنة أو إعاقة للزوجة؟</label>
+                <select id="wifeIll" required>
+                    <option selected disabled value="">اختر</option>
+                    <option value="لا">لا</option>
+                    <option value="نعم">نعم</option>
+                </select>
+
+                <label>نوع مرض الزوجة (إن وجد)</label>
+                <input type="text" id="wifeIllType">
+
+                <label>عدد أفراد العائلة</label>
+                <input type="number" id="familyCount" required>
+
+                <label>عدد الذكور مع الأب</label>
+                <input type="number" id="maleCount" required>
+
+                <label>عدد الإناث مع الأم</label>
+                <input type="number" id="femaleCount" required>
+
+                <label>العنوان</label>
+                <select id="address" required>
+                    <option selected disabled value="">اختر</option>
+                    <option value="الابراج">الابراج</option>
+                    <option value="مسجد الاحسان">مسجد الاحسان</option>
+                    <option value="مسجد بلال">مسجد بلال</option>   
+                    <option value="مسجد الغفار">مسجد الغفار</option>   
+                    <option value="مسجد الفاروق">مسجد الفاروق</option>
+                    <option value="مسجد حمزة">مسجد حمزة</option>
+                    <option value="مسجد الحكمة">مسجد الحكمة</option>
+                    <option value="مسجد التقوى">مسجد التقوى</option>
+                </select>
+
+                <label>عنوان النزوح الحالي</label>
+                <input type="text" id="displacement" required>
+
+                <label>العمل</label>
+                <select id="work">
+                    <option selected disabled value="">اختر</option>
+                    <option value="موظف رام الله">موظف رام الله</option>
+                    <option value="موظف غزة">موظف غزة</option>
+                    <option value="قطاع خاص">قطاع خاص</option>
+                    <option value="وكالة الغوث">وكالة الغوث</option>
+                    <option value="عمل حر">عمل حر</option>
+                    <option value="لا يعمل">لا يعمل</option>
+                </select>
+
+                <label>الاحتياجات الطبية</label>
+                <textarea id="medicalNeeds" rows="3"></textarea>
+            </div>
+
+            <div class="Rest" id="nextSection" style="display:none;">
+                <button type="button" class="next-btn" onclick="validateAndGo()">
+                    الانتقال لقسم الابناء 
+                    <span class="arrow">←</span>
+                </button>
+            </div>
+            
+        </fieldset>
+    </div>
+
+    <script src="JS/FormLogic.js"></script>
+
+</body>
+</html>

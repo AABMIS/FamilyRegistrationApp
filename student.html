@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بيانات الطلاب الجامعيين</title>
+    <link rel="stylesheet" href="CSS/FormStyle.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>بيانات الطلاب الجامعيين</h2>
+
+    <label>هل يوجد طلاب جامعيين في الأسرة؟</label>
+    <select id="hasStudent" onchange="toggleStudent()">
+        <option value="" selected disabled>اختر</option>
+        <option value="yes">نعم</option>
+        <option value="no">لا</option>
+    </select>
+
+    <div id="studentSection" style="display:none;">
+        <div id="studentContainer"></div>
+        <button type="button" class="btn-add" onclick="addStudent()">+ إضافة طالب</button>
+    </div>
+
+    <br>
+    <button type="button" class="btn-submit" onclick="saveStudent()" style="background-color: green;">حفظ وإنهاء التسجيل 🏁</button>
+</div>
+
+<script src="JS/StudentLogic.js"></script>
+</body>
+</html>
