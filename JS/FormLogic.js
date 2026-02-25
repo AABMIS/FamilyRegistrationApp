@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMsMmEoxviek7_7CE75m50mqcn7YMHWHMpYdSr9HPVE2RxW5nnWDFtrDt4oJDTovwo6g/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/exec";
 
 // 2️⃣ دالة مساعدة لتعبئة الحقول (للاستخدام عند جلب البيانات القديمة)
 function setValue(elementId, value) {
@@ -22,6 +22,7 @@ function isValidId(id) {
     return /^\d{9}$/.test(id);
 }
 
+let idVerified = false;
 // ==========================================
 // 5️⃣ دالة الفحص (checkId)
 // ==========================================
@@ -31,6 +32,7 @@ async function checkId() {
     const restForm = document.getElementById("restForm");
     const nextBtnDiv = document.getElementById("nextSection");
 
+    idVerified = false;
     // إخفاء الفورم وتصفير الرسائل
     restForm.style.display = "none";
     if (nextBtnDiv) nextBtnDiv.style.display = "none";
@@ -61,14 +63,16 @@ async function checkId() {
         if (checkStatus.martyr) {
             message.textContent = "❌ لا يمكن التسجيل، هذا الرقم مسجل في كشف الشهداء.";
             message.style.color = "red";
+            idVerified = false;
             return;
         }
 
         if (data.found) {
             // الحالة أ: موجود في الجديد
             if (data.source === "new") {
-                message.textContent = "⚠️ هذا الشخص مسجل حديثاً بالفعل.";
+                message.textContent = "⚠️ هذا الشخص مسجل مسبقا.";
                 message.style.color = "orange";
+                idVerified = false;
                 return;
             }
 
@@ -76,6 +80,8 @@ async function checkId() {
             if (data.source === "old") {
                 message.textContent = "✅ الرقم يسمح له بالتسجيل، يمكنك استكمال البيانات.";
                 message.style.color = "green";
+
+                idVerified = true;
 
                 restForm.style.display = "block";
                 if (nextBtnDiv) nextBtnDiv.style.display = "block";
@@ -94,6 +100,7 @@ async function checkId() {
             // الحالة ج: غير موجود (مرفوض حسب طلبك السابق)
             message.textContent = "❌ الرقم غير مسموح له بالتسجيل. راجع الإدارة.";
             message.style.color = "red";
+            idVerified = false;
         }
 
     } catch (error) {
@@ -148,7 +155,6 @@ function goToChildren() {
     } catch (error) {
         console.error("Error collecting data:", error);
         alert("حدث خطأ غير متوقع، سيتم نقلك للصفحة التالية.");
-        window.location.href = "children.html";
     }
 }
 
@@ -156,6 +162,11 @@ function goToChildren() {
 // 6️⃣ دالة التحقق قبل الانتقال (validateAndGo)
 // ==========================================
 function validateAndGo() {
+    if (!idVerified) {
+        alert("يجب التحقق من رقم الهوية أولاً");
+        return;
+    }
+
     const restForm = document.getElementById("restForm");
     // نفحص فقط الحقول الظاهرة والمطلوبة
     const inputs = restForm.querySelectorAll("input[required], select[required]");
@@ -192,9 +203,15 @@ function validateAndGo() {
     const total = Number(getVal("familyCount"));
     const male = Number(getVal("maleCount"));
     const female = Number(getVal("femaleCount"));
+    const today = new Date().toISOString().split("T")[0];
 
-    if (male + female > total) {
-        alert("خطأ: عدد الذكور والإناث أكبر من عدد أفراد العائلة");
+    if (male + female !== total) {
+        alert("عدد الذكور والإناث يجب أن يساوي عدد أفراد العائلة بالضبط");
+        return;
+    }
+
+    if (total <= 0 || male < 0 || female < 0) {
+        alert("الأعداد يجب أن تكون أرقام صحيحة موجبة");
         return;
     }
     // ==========================================
@@ -213,6 +230,11 @@ function validateAndGo() {
         alert("رقم هوية الزوجة غير صحيح (9 أرقام)");
         return;
     }
+
+    if (getVal("husbandId") === getVal("wifeId")) {
+        alert("لا يمكن أن يكون رقم هوية الزوجة نفس رقم الزوج");
+        return;
+    }
     // ==========================================
     //   منع إدخال نوع مرض بدون اختيار نعم
     // ==========================================
@@ -226,6 +248,18 @@ function validateAndGo() {
         alert("اكتب نوع مرض الزوجة");
         return;
     }
+   // ==========================================
+    //   منع إدخال تاريخ ميلاد مستقبلي
+    // ==========================================
 
+    if (getVal("husbandBirth") > today) {
+        alert("تاريخ ميلاد الزوج غير صحيح");
+        return;
+    }
+
+    if (getVal("wifeBirth") > today) {
+        alert("تاريخ ميلاد الزوجة غير صحيح");
+        return;
+    }
     goToChildren();
 }

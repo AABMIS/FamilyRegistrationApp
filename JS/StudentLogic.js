@@ -1,5 +1,5 @@
 // ⚠️ تأكد من وضع الرابط الجديد هنا
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMsMmEoxviek7_7CE75m50mqcn7YMHWHMpYdSr9HPVE2RxW5nnWDFtrDt4oJDTovwo6g/exec"; 
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/exec";
 
 let studentCount = 0;
 const maxStudents = 10;
@@ -20,7 +20,7 @@ function addStudent() {
 
     const container = document.getElementById("studentContainer");
     const div = document.createElement("div");
-    
+
     // تنسيق البطاقة
     div.style.border = "1px solid #ccc";
     div.style.padding = "15px";
@@ -67,40 +67,41 @@ function addStudent() {
 
 // دالة الحفظ النهائي
 function saveStudent() {
-    // 1. جلب البيانات العامة بشكل صحيح ✅
+
     const rawData = localStorage.getItem("generalData");
+
     if (!rawData) {
-        alert("⚠️ خطأ: بيانات التسجيل مفقودة! يرجى البدء من جديد.");
+        alert("⚠️ بيانات رب الأسرة مفقودة");
         return;
     }
+
     const generalData = JSON.parse(rawData);
 
     const choice = document.getElementById("hasStudent").value;
     const container = document.querySelectorAll("#studentContainer > div");
 
-    // 2. التحقق من القائمة
     if (choice === "") {
-        alert("⚠️ يرجى تحديد الخيار (نعم / لا) أولاً.");
+        alert("⚠️ اختر نعم أو لا أولاً");
         return;
     }
 
-    // 3. إذا اختار "لا" -> إنهاء فوري
     if (choice === "no") {
         finishRegistration();
         return;
     }
 
-    // 4. إذا اختار "نعم" ولم يضف
     if (choice === "yes" && container.length === 0) {
-        alert("⚠️ اخترت 'نعم' ولكن لم تضف أي طالب.");
+        alert("⚠️ يجب إضافة طالب واحد على الأقل");
         return;
     }
 
-    // 5. تجميع البيانات وفحص النواقص
     const students = [];
-    let isDataIncomplete = false;
+    const usedIds = new Set();
+
+    let hasError = false;
 
     container.forEach(div => {
+
         const nameInp = div.querySelector(".sName");
         const idInp = div.querySelector(".sId");
         const phoneInp = div.querySelector(".sPhone");
@@ -109,65 +110,108 @@ function saveStudent() {
         const levelInp = div.querySelector(".sLevel");
         const univInp = div.querySelector(".sUnivName");
 
-        const valName = nameInp.value.trim();
-        const valId = idInp.value.trim();
-        const valPhone = phoneInp.value.trim();
-        const valUId = uIdInp.value.trim();
-        const valMajor = majorInp.value.trim();
-        const valLevel = levelInp.value;
-        const valUniv = univInp.value.trim();
+        const vName = nameInp.value.trim();
+        const vId = idInp.value.trim();
+        const vPhone = phoneInp.value.trim();
+        const vUid = uIdInp.value.trim();
+        const vMajor = majorInp.value.trim();
+        const vLevel = levelInp.value;
+        const vUniv = univInp.value.trim();
 
-        // تنظيف الألوان
-        [nameInp, idInp, phoneInp, uIdInp, majorInp, levelInp, univInp].forEach(el => el.style.border = "1px solid #ccc");
+        [nameInp, idInp, phoneInp, uIdInp, majorInp, levelInp, univInp]
+            .forEach(el => el.style.border = "1px solid #ccc");
 
-        if (!valName || !valId || !valPhone || !valUId || !valMajor || !valLevel || !valUniv) {
-            isDataIncomplete = true;
-            if (!valName) nameInp.style.border = "1px solid red";
-            // ... يمكنك تلوين الباقي بنفس الطريقة
+        if (
+            !vName ||
+            !vId ||
+            !vPhone ||
+            !vUid ||
+            !vMajor ||
+            !vLevel ||
+            !vUniv
+        ) {
+            hasError = true;
+
+            if (!vName) nameInp.style.border = "1px solid red";
+            if (!vId) idInp.style.border = "1px solid red";
+            if (!vPhone) phoneInp.style.border = "1px solid red";
+            if (!vUid) uIdInp.style.border = "1px solid red";
+            if (!vMajor) majorInp.style.border = "1px solid red";
+            if (!vLevel) levelInp.style.border = "1px solid red";
+            if (!vUniv) univInp.style.border = "1px solid red";
         }
 
+        if (!/^\d{9}$/.test(vId)) {
+            idInp.style.border = "1px solid red";
+            hasError = true;
+        }
+
+        if (!/^05\d{8}$/.test(vPhone)) {
+            phoneInp.style.border = "1px solid red";
+            hasError = true;
+        }
+
+        if (usedIds.has(vId)) {
+            alert("❌ يوجد تكرار في رقم هوية الطلاب");
+            idInp.style.border = "1px solid red";
+            hasError = true;
+        }
+
+        const today = new Date().toISOString().split("T")[0];
+
         students.push({
-            name: valName,
-            id: valId,
-            phone: valPhone,
-            uId: valUId,
-            major: valMajor,
-            level: valLevel,
-            univ: valUniv
+            name: vName,
+            id: vId,
+            phone: vPhone,
+            uId: vUid,
+            major: vMajor,
+            level: vLevel,
+            univ: vUniv
         });
+
+        usedIds.add(vId);
     });
 
-    if (isDataIncomplete) {
-        alert("⚠️ يرجى تعبئة كافة حقول بيانات الطلاب.");
+    if (hasError) {
+        alert("⚠️ يرجى تعبئة جميع بيانات الطلاب بشكل صحيح");
         return;
     }
 
-    // 6. الإرسال
     const btn = document.querySelector(".btn-submit");
     const oldText = btn.innerText;
-    btn.innerText = "جاري الحفظ والإنهاء...";
+
+    btn.innerText = "جاري الحفظ...";
     btn.disabled = true;
 
     const payload = {
         action: "saveStudent",
-        husbandName: generalData.husbandName, // ✅ نرسل الاسم ليحفظه السكربت في العمود B
-        husbandId: generalData.husbandId,     // ✅ نرسل الهوية ليحفظها السكربت في العمود C
+        husbandName: generalData.husbandName,
+        husbandId: generalData.husbandId,
         students: students
     };
 
-    fetch(SCRIPT_URL, { 
+    fetch(SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
     })
-    .then(() => {
-        finishRegistration();
-    })
-    .catch(err => {
-        alert("خطأ في الاتصال");
-        btn.innerText = oldText;
-        btn.disabled = false;
-    });
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                finishRegistration()
+            }
+
+            btn.innerText = oldText;
+            btn.disabled = false;
+
+        })
+        .catch(err => {
+            alert("خطأ في الاتصال");
+            btn.innerText = oldText;
+            btn.disabled = false;
+        });
 }
 
 // دالة الإنهاء وتنظيف الذاكرة

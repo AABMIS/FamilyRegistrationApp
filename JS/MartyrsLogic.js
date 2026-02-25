@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMsMmEoxviek7_7CE75m50mqcn7YMHWHMpYdSr9HPVE2RxW5nnWDFtrDt4oJDTovwo6g/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/exec";
 
 let martyrCount = 0;
 const maxMartyrs = 10;
@@ -52,108 +52,133 @@ function addMartyr() {
 }
 
 function saveMartyrs() {
-    // 1. جلب بيانات رب الأسرة من الذاكرة
+
     const rawData = localStorage.getItem("generalData");
+
     if (!rawData) {
-        alert("⚠️ خطأ: بيانات رب الأسرة مفقودة! يرجى العودة للبداية.");
-        window.location.href = "index.html"; // أو register.html
+        alert("⚠️ بيانات رب الأسرة مفقودة!");
         return;
     }
+
     const generalData = JSON.parse(rawData);
 
-    // 2. التحقق من الاختيارات
     const choice = document.getElementById("hasMartyrs").value;
     const container = document.querySelectorAll("#martyrsContainer > div");
 
     if (choice === "") {
-        alert("⚠️ يرجى تحديد الخيار (نعم / لا) أولاً.");
+        alert("⚠️ اختر نعم أو لا أولاً");
         return;
     }
 
-    // الانتقال للطلاب إذا اختار "لا"
     if (choice === "no") {
         window.location.href = "student.html";
         return;
     }
 
-    // التحقق من إضافة شهداء فعلياً
     if (choice === "yes" && container.length === 0) {
-        alert("⚠️ اخترت 'نعم' ولكن لم تضف أي شهيد.");
+        alert("⚠️ يجب إضافة شهيد واحد على الأقل");
         return;
     }
 
-    // 3. تجميع بيانات الشهداء
     const martyrs = [];
-    let isDataIncomplete = false;
+    const usedIds = new Set();
+    const today = new Date().toISOString().split("T")[0];
+
+    let hasError = false;
 
     container.forEach(div => {
+
         const nameInp = div.querySelector(".mName");
         const idInp = div.querySelector(".mId");
         const dateInp = div.querySelector(".mDate");
         const relInp = div.querySelector(".mRel");
 
-        const valName = nameInp.value.trim();
-        const valId = idInp.value.trim();
-        const valDate = dateInp.value;
-        const valRel = relInp.value;
+        const vName = nameInp.value.trim();
+        const vId = idInp.value.trim();
+        const vDate = dateInp.value;
+        const vRel = relInp.value;
 
-        // تنظيف الحدود
-        [nameInp, idInp, dateInp, relInp].forEach(el => el.style.border = "1px solid #ccc");
+        [nameInp, idInp, dateInp, relInp].forEach(el =>
+            el.style.border = "1px solid #ccc"
+        );
 
-        if (!valName || !valId || !valDate || !valRel) {
-            isDataIncomplete = true;
-            if (!valName) nameInp.style.border = "1px solid red";
-            if (!valId) idInp.style.border = "1px solid red";
-            if (!valDate) dateInp.style.border = "1px solid red";
-            if (!valRel) relInp.style.border = "1px solid red";
+        if (
+            !vName ||
+            !vId ||
+            !vDate ||
+            !vRel ||
+            !/^\d{9}$/.test(vId) ||
+            vDate > today
+        ) {
+            hasError = true;
+
+            if (!vName) nameInp.style.border = "1px solid red";
+            if (!vId || !/^\d{9}$/.test(vId)) idInp.style.border = "1px solid red";
+            if (!vDate || vDate > today) dateInp.style.border = "1px solid red";
+            if (!vRel) relInp.style.border = "1px solid red";
+
+            return;
         }
-        if (!/^[0-9]{9}$/.test(valId)) {
+
+        if (usedIds.has(vId)) {
+            alert("❌ يوجد تكرار في رقم هوية أحد الشهداء");
+            hasError = true;
             idInp.style.border = "1px solid red";
-            alert("⚠️ رقم هوية الشهيد يجب أن يكون 9 أرقام");
-            isDataIncomplete = true;
+            return;
         }
+
+        usedIds.add(vId);
 
         martyrs.push({
-            name: valName,
-            id: valId,
-            date: valDate,
-            rel: valRel,
-            phone: generalData.phone // إضافة رقم جوال رب الأسرة لكل شهيد (اختياري ولكنه مفيد)
+            name: vName,
+            id: vId,
+            date: vDate,
+            rel: vRel,
+            phone: generalData.phone
         });
+
     });
 
-    if (isDataIncomplete) {
-        alert("⚠️ يرجى تعبئة جميع الحقول المطلوبة باللون الأحمر.");
+    if (hasError) {
+        alert("⚠️ يجب تعبئة جميع بيانات الشهداء بشكل كامل وصحيح");
         return;
     }
 
-    // 4. الإرسال للسيرفر
-    const btn = document.querySelector(".btn-submit"); // تأكد أن الزر يحمل هذا الكلاس
+    const btn = document.querySelector(".btn-submit");
     const oldText = btn.innerText;
+
     btn.innerText = "جاري الحفظ...";
     btn.disabled = true;
 
     const payload = {
         action: "saveMartyrs",
-        husbandName: generalData.husbandName, // ✅ الاسم الصحيح المتوافق مع السكربت
-        husbandId: generalData.husbandId,     // ✅ الاسم الصحيح المتوافق مع السكربت
+        husbandName: generalData.husbandName,
+        husbandId: generalData.husbandId,
         martyrs: martyrs
     };
 
     fetch(SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
     })
-        .then(() => {
-            alert("✅ تم إرسال بيانات الشهداء بنجاح.");
-            window.location.href = "student.html";
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert("✅ تم إرسال البيانات بنجاح.");
+                window.location.href = "student.html";
+                return;
+            }
+
+            btn.innerText = oldText;
+            btn.disabled = false;
+
         })
-        .catch(err => {
-            console.error(err);
-            alert("❌ حدث خطأ أثناء محاولة الإرسال.");
+        .catch(() => {
+            alert("❌ خطأ في الاتصال");
             btn.innerText = oldText;
             btn.disabled = false;
         });
-
 }

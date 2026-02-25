@@ -1,50 +1,20 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMsMmEoxviek7_7CE75m50mqcn7YMHWHMpYdSr9HPVE2RxW5nnWDFtrDt4oJDTovwo6g/exec";
 
 let childCount = 0;
 const maxChildren = 15;
 
-let requiredChildrenCount = 0;
-
-document.addEventListener("DOMContentLoaded", () => {
-    const storedData = localStorage.getItem("generalData");
-    if (!storedData) return;
-
-    const generalData = JSON.parse(storedData);
-    const familyCount = parseInt(generalData.familyCount);
-
-    if (!isNaN(familyCount) && familyCount >= 2) {
-        requiredChildrenCount = familyCount - 2;
-    }
-});
-
 // إظهار/إخفاء القسم
 function toggleChildren() {
     const choice = document.getElementById("hasChildren").value;
-
-    if (requiredChildrenCount > 0 && choice === "no") {
-        alert(`لديك ${requiredChildrenCount} أبناء مسجلين ضمن عدد العائلة. يجب إضافتهم.`);
-        document.getElementById("hasChildren").value = "";
-        return;
-    }
-
-    if (requiredChildrenCount === 0 && choice === "yes") {
-        alert("عدد أفراد العائلة لا يحتوي أبناء.");
-        document.getElementById("hasChildren").value = "";
-        return;
-    }
-
-    document.getElementById("childrenSection").style.display =
-        (choice === "yes") ? "block" : "none";
+    document.getElementById("childrenSection").style.display = (choice === "yes") ? "block" : "none";
 }
 
 // إضافة ابن جديد
 function addChild() {
-
-    if (childCount >= requiredChildrenCount) {
-        alert(`يجب إضافة ${requiredChildrenCount} أبناء فقط.`);
+    if (childCount >= maxChildren) {
+        alert("الحد الأقصى 15 ابن فقط");
         return;
     }
-
     childCount++;
 
     const container = document.getElementById("childrenContainer");
@@ -77,33 +47,17 @@ function addChild() {
         <input type="date" class="childBirth" required>
 
         <label>هل يعاني من أمراض؟</label>
-        <select class="childIll"  required>
-          <option value="">اختر</option>
-          <option value="لا">لا</option>
-          <option value="نعم">نعم</option>
+        <select class="childIll" required>
+            <option value="لا">لا</option>
+            <option value="نعم">نعم</option>
         </select>
 
-        <div class="illnessTypeWrapper" style="display:none;">
-          <label>نوع المرض</label>
-          <input type="text" class="childIllType">
-        </div>
+        <label>نوع المرض (إن وجد)</label>
+        <input type="text" class="childIllType">
 
         <button type="button" class="btn-delete" onclick="this.parentElement.remove(); childCount--;" style="background-color:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
-    const illSelect = div.querySelector(".childIll");
-    const illWrapper = div.querySelector(".illnessTypeWrapper");
-    const illInput = illWrapper.querySelector(".childIllType");
 
-    illSelect.addEventListener("change", () => {
-        if (illSelect.value === "نعم") {
-            illWrapper.style.display = "block";
-            illInput.setAttribute("required", "true");
-        } else {
-            illWrapper.style.display = "none";
-            illInput.removeAttribute("required");
-            illInput.value = "";
-        }
-    });
     container.appendChild(div);
 }
 
@@ -135,7 +89,6 @@ function saveAll() {
     let isDataIncomplete = false;
 
     if (choice === "yes") {
-
         if (container.length === 0) {
             alert("⚠️ اخترت 'نعم' ولكن لم تضف أي ابن.");
             return;
@@ -144,7 +97,6 @@ function saveAll() {
         const usedIds = new Set();
 
         container.forEach(div => {
-
             const nameInp = div.querySelector(".childName");
             const idInp = div.querySelector(".childId");
             const genderInp = div.querySelector(".childGender");
@@ -159,58 +111,43 @@ function saveAll() {
             const vIll = illInp.value;
             const vIllType = illTypeInp.value.trim();
 
-            [nameInp, idInp, genderInp, birthInp, illInp, illTypeInp]
-                .forEach(el => el.style.border = "1px solid #ccc");
+            // تنظيف الألوان
+            [nameInp, idInp, genderInp, birthInp, illInp].forEach(el => el.style.border = "1px solid #ccc");
 
-            let hasError = false;
-
-            if (!vName) {
-                nameInp.style.border = "1px solid red";
-                hasError = true;
+            // التحقق من الحقول الإجبارية
+            if (!vName || !vId || !vGender || !vBirth || !vIll) {
+                isDataIncomplete = true;
+                if (!vName) nameInp.style.border = "1px solid red";
+                if (!vId) idInp.style.border = "1px solid red";
+                if (!vGender) genderInp.style.border = "1px solid red";
+                if (!vBirth) birthInp.style.border = "1px solid red";
+                if (!vIll) illInp.style.border = "1px solid red";
             }
+            // التحقق من هوية الابن
 
             if (!/^\d{9}$/.test(vId)) {
+                isDataIncomplete = true;
                 idInp.style.border = "1px solid red";
-                hasError = true;
             }
-
-            if (!vGender) {
-                genderInp.style.border = "1px solid red";
-                hasError = true;
+            // منع تكرار رقم هوية الأبناء داخل نفس العائلة
+            if (usedIds.has(vId)) {
+                alert("❌ يوجد تكرار في رقم هوية أحد الأبناء");
+                idInp.style.border = "1px solid red";
+                isDataIncomplete = true;
             }
-
-            if (!vBirth) {
-                birthInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!vIll) {
-                illInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
+            usedIds.add(vId);
+            // منع إدخال نوع مرض بدون اختيار "نعم"
             if (vIll === "نعم" && !vIllType) {
                 illTypeInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            const today = new Date().toISOString().split("T")[0];
-            if (vBirth && vBirth > today) {
-                birthInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (usedIds.has(vId)) {
-                idInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (hasError) {
                 isDataIncomplete = true;
-                return;
+            }
+            // منع عمر غير منطقي (تاريخ الميلاد في المستقبل)
+            const today = new Date().toISOString().split("T")[0];
+            if (vBirth > today) {
+                birthInp.style.border = "1px solid red";
+                isDataIncomplete = true;
             }
 
-            usedIds.add(vId);
 
             children.push({
                 name: vName,
@@ -220,17 +157,11 @@ function saveAll() {
                 ill: vIll,
                 illType: vIllType
             });
-
         });
     }
 
     if (isDataIncomplete) {
         alert("⚠️ يرجى تعبئة كافة الحقول المطلوبة.");
-        return;
-    }
-
-    if (choice === "yes" && container.length !== requiredChildrenCount) {
-        alert(`يجب إدخال ${requiredChildrenCount} أبناء بالضبط قبل المتابعة.`);
         return;
     }
 
@@ -250,22 +181,12 @@ function saveAll() {
 
     fetch(SCRIPT_URL, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        mode: "no-cors"
         body: JSON.stringify(payload)
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                alert("✅ تم إرسال البيانات بنجاح.");
-                window.location.href = "injured.html";
-                return;
-            }
-
-            btn.innerText = oldText;
-            btn.disabled = false;
-
+        .then(() => {
+            alert("✅ تم إرسال البيانات بنجاح).");
+            window.location.href = "injured.html";
         })
         .catch(err => {
             console.error(err);

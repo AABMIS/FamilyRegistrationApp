@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMsMmEoxviek7_7CE75m50mqcn7YMHWHMpYdSr9HPVE2RxW5nnWDFtrDt4oJDTovwo6g/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/execأ";
 
 let injuredCount = 0;
 const maxInjured = 8;
@@ -77,47 +77,58 @@ function saveInjured() {
     // 4. تجميع البيانات فقط إذا كان الخيار نعم
     if (choice === "yes") {
         container.forEach(div => {
+
             const nameInp = div.querySelector(".injuredName");
             const idInp = div.querySelector(".injuredId");
             const phoneInp = div.querySelector(".injuredPhone");
             const typeInp = div.querySelector(".injuredType");
             const dateInp = div.querySelector(".injuredDate");
 
-            // تنظيف القيم
             const valName = nameInp.value.trim();
             const valId = idInp.value.trim();
             const valPhone = phoneInp.value.trim();
             const valType = typeInp.value.trim();
             const valDate = dateInp.value;
 
-            // إعادة تعيين الألوان
-            [nameInp, idInp, phoneInp, typeInp, dateInp].forEach(inp => inp.style.border = "1px solid #ccc");
+            [nameInp, idInp, phoneInp, typeInp, dateInp]
+                .forEach(inp => inp.style.border = "1px solid #ccc");
 
-            // فحص الفراغات
-            if (!valName || !valId || !valPhone || !valType || !valDate) {
-                isDataIncomplete = true;
-                if (!valName) nameInp.style.border = "1px solid red";
-                if (!valId) idInp.style.border = "1px solid red";
-                if (!valPhone) phoneInp.style.border = "1px solid red";
-                if (!valType) typeInp.style.border = "1px solid red";
-                if (!valDate) dateInp.style.border = "1px solid red";
+            let hasError = false;
+
+            if (!valName) {
+                nameInp.style.border = "1px solid red";
+                hasError = true;
             }
+
             if (!/^[0-9]{9}$/.test(valId)) {
                 idInp.style.border = "1px solid red";
-                alert("⚠️ رقم هوية المصاب يجب أن يكون 9 أرقام");
-                isDataIncomplete = true;
-            }
-            if (!/^[0-9]{7,12}$/.test(valPhone)) {
-                phoneInp.style.border = "1px solid red";
-                alert("⚠️ رقم الجوال غير صحيح");
-                isDataIncomplete = true;
-            }
-            if (injured.some(x => x.id === valId)) {
-                idInp.style.border = "1px solid red";
-                alert("⚠️ لا يمكن إدخال نفس المصاب مرتين");
-                isDataIncomplete = true;
+                hasError = true;
             }
 
+            if (!/^[0-9]{7,12}$/.test(valPhone)) {
+                phoneInp.style.border = "1px solid red";
+                hasError = true;
+            }
+
+            if (!valType) {
+                typeInp.style.border = "1px solid red";
+                hasError = true;
+            }
+
+            if (!valDate) {
+                dateInp.style.border = "1px solid red";
+                hasError = true;
+            }
+
+            if (injured.some(x => x.id === valId)) {
+                idInp.style.border = "1px solid red";
+                hasError = true;
+            }
+
+            if (hasError) {
+                isDataIncomplete = true;
+                return;
+            }
 
             injured.push({
                 name: valName,
@@ -126,6 +137,7 @@ function saveInjured() {
                 type: valType,
                 date: valDate
             });
+
         });
     }
 
@@ -157,12 +169,31 @@ function saveInjured() {
 
     fetch(SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors", // 🔹 مهم لجوجل سكريبت
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify(payload)
     })
-        .then(() => {
-            alert("✅ تم إرسال بيانات الجرحى بنجاح.");
-            window.location.href = "martyrs.html";
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.status === "martyr") {
+                alert("❌ لا يمكن تسجيل هذا المصاب لأن رقم الهوية موجود في كشف الشهداء.");
+            }
+
+            else if (data.status === "duplicate") {
+                alert("⚠️ هذا المصاب مسجل مسبقاً لنفس الأسرة.");
+            }
+
+            else if (data.status === "success") {
+                alert("✅ تم إرسال بيانات الجرحى بنجاح.");
+                window.location.href = "martyrs.html";
+                return;
+            }
+
+            btn.innerText = oldText;
+            btn.disabled = false;
+
         })
         .catch(err => {
             console.error(err);
