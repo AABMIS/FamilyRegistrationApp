@@ -286,14 +286,22 @@ async function submitUpdates() {
             students: students
         };
 
-        const response = await await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST", 
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify(payload)
         });
-        alert("✅ تم تعديل البيانات بنجاح.");
-         window.location.href = "index.html"; // العودة للصفحة الرئيسية
 
+        const result = await response.json();
+
+        if (result.status === "success") {
+            alert("✅ تم تعديل البيانات بنجاح.");
+            window.location.href = "index.html";
+        } else {
+            throw new Error(result.message || "فشل التحديث");
+        }
 
     } catch (error) {
         console.error(error);
