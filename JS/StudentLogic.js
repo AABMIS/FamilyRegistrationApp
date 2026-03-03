@@ -1,5 +1,5 @@
 // ⚠️ تأكد من وضع الرابط الجديد هنا
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrH0GCZRFtb8CID1ddBuyxE6v4Gg8xu25Si7NeHKeRtfTTD5ljq-MZkNHYdU5kiP6Buw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvOUbBDmHL6E0XBX_7d75jaF2n4TcAYPnj4akUU21Y-nwQFZ2pOg/exec";
 
 let studentCount = 0;
 const maxStudents = 10;
