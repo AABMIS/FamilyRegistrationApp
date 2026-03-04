@@ -300,7 +300,7 @@ async function submitUpdates() {
             alert("✅ تم تعديل البيانات بنجاح.");
             window.location.href = "index.html";
         } else {
-            throw new Error(result.message || "فشل التحديث");
+            throw new Error(result.msg || "فشل التحديث");
         }
 
     } catch (error) {
