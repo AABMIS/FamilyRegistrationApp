@@ -11,35 +11,32 @@
 <body>
 
     <div class="container">
-        <h2>تحديث بيانات العائلة</h2>
+        <h2>تحديث بيانات العائلة 🔄</h2>
 
-        <div id="searchSection" style="text-align: center; padding: 20px;">
-            <label>أدخل رقم هوية الزوج للتعديل:</label>
-            <input type="number" id="searchId" placeholder="رقم الهوية المكون من 9 أرقام"
+        <div id="searchSection" style="text-align: center; padding: 20px; border-bottom: 2px solid #ddd; margin-bottom: 20px;">
+            <label style="font-size: 1.1em; font-weight: bold;">أدخل رقم هوية الزوج للتعديل:</label><br><br>
+            <input type="text" id="searchId" inputmode="numeric" placeholder="رقم الهوية المكون من 9 أرقام"
                 style="width: 60%; display: inline-block;">
-            <button onclick="fetchData()" class="btn-submit" style="width: 30%; display: inline-block;">بحث
-                وتعديل</button>
-            <p id="msg" style="display:none; color: blue; font-weight: bold; margin-top: 10px;">جاري جلب البيانات من
-                السجلات...</p>
+            <button onclick="fetchData()" id="searchBtn" class="btn-submit" style="width: 30%; display: inline-block;">بحث وتعديل</button>
+            <p id="msg" style="display:none; color: #2196F3; font-weight: bold; margin-top: 10px;">جاري جلب البيانات من السجلات ⏳...</p>
         </div>
 
         <div id="updateFormSection" style="display:none;">
 
-            <div id="step1" class="form-section active-section">
-                <h3>1. البيانات العامة</h3>
+            <div id="step1" class="form-section active-section" style="display: block;">
+                <h3 style="border-bottom: 2px solid #2196F3; padding-bottom: 10px;">1. البيانات العامة</h3>
 
-                <h4>بيانات الزوج (رب الأسرة)</h4>
                 <label>رقم هوية الزوج</label>
-                <input type="number" id="husbandId" readonly style="background-color: #e9e9e9;">
+                <input type="text" id="husbandId" readonly style="background-color: #e9e9e9; cursor: not-allowed;">
 
                 <label>اسم الزوج رباعي</label>
-                <input type="text" id="husbandName">
+                <input type="text" id="husbandName" required>
 
                 <label>تاريخ الميلاد</label>
-                <input type="date" id="husbandBirth">
+                <input type="date" id="husbandBirth" required>
 
                 <label>الحالة الاجتماعية</label>
-                <select id="status">
+                <select id="status" required>
                     <option value="متزوج">متزوج</option>
                     <option value="أعزب">أعزب</option>
                     <option value="أرمل">أرمل</option>
@@ -47,46 +44,47 @@
                 </select>
 
                 <label>رقم الجوال</label>
-                <input type="number" id="phone">
+                <input type="text" id="phone" inputmode="numeric" required>
 
-                <label>رقم جوال بديل</label>
-                <input type="number" id="altPhone">
+                <label>رقم جوال بديل (اختياري)</label>
+                <input type="text" id="altPhone" inputmode="numeric">
 
                 <label>هل يعاني الزوج من أمراض مزمنة؟</label>
-                <select id="husbandIll">
+                <select id="husbandIll" required onchange="toggleIllness('husbandIll', 'husbandIllType')">
                     <option value="لا">لا</option>
                     <option value="نعم">نعم</option>
                 </select>
 
                 <label>نوع المرض (إن وجد)</label>
-                <input type="text" id="husbandIllType">
+                <input type="text" id="husbandIllType" disabled>
 
                 <label>اسم الزوجة رباعي</label>
-                <input type="text" id="wifeName">
+                <input type="text" id="wifeName" required>
 
                 <label>رقم هوية الزوجة</label>
-                <input type="number" id="wifeId">
+                <input type="text" id="wifeId" inputmode="numeric" required>
 
                 <label>تاريخ ميلاد الزوجة</label>
-                <input type="date" id="wifeBirth">
+                <input type="date" id="wifeBirth" required>
 
                 <label>هل تعاني الزوجة من أمراض مزمنة؟</label>
-                <select id="wifeIll">
+                <select id="wifeIll" required onchange="toggleIllness('wifeIll', 'wifeIllType')">
                     <option value="لا">لا</option>
                     <option value="نعم">نعم</option>
                 </select>
 
                 <label>نوع المرض (إن وجد)</label>
-                <input type="text" id="wifeIllType">
+                <input type="text" id="wifeIllType" disabled>
 
                 <label>عدد أفراد الأسرة الكلي</label>
-                <input type="number" id="familyCount">
+                <input type="number" id="familyCount" min="1" required>
 
                 <label>عدد الذكور</label>
-                <input type="number" id="maleCount">
+                <input type="number" id="maleCount" min="0" required>
 
                 <label>عدد الإناث</label>
-                <input type="number" id="femaleCount">
+                <input type="number" id="femaleCount" min="0" required>
+
                 <label>العنوان</label>
                 <select id="address" required>
                     <option value="الابراج">الابراج</option>
@@ -103,7 +101,7 @@
                 <input type="text" id="displacement" required>
 
                 <label>العمل</label>
-                <select id="work">
+                <select id="work" required>
                     <option value="موظف رام الله">موظف رام الله</option>
                     <option value="موظف غزة">موظف غزة</option>
                     <option value="قطاع خاص">قطاع خاص</option>
@@ -112,61 +110,53 @@
                     <option value="لا يعمل">لا يعمل</option>
                 </select>
 
-                <label>الاحتياجات الطبية</label>
+                <label>الاحتياجات الطبية (اختياري)</label>
                 <textarea id="medicalNeeds" rows="3"></textarea>
                 <br><br>
                 <button type="button" class="btn-submit" onclick="nextStep(1)">التالي: الأبناء ⬅️</button>
             </div>
 
-            <div id="step2" class="form-section">
-                <h3>2. الأبناء</h3>
+            <div id="step2" class="form-section" style="display: none;">
+                <h3 style="border-bottom: 2px solid #2196F3; padding-bottom: 10px;">2. الأبناء</h3>
                 <div id="childrenContainer"></div>
                 <button type="button" class="btn-add" onclick="addChildRow()">+ إضافة ابن جديد</button>
                 <br><br>
-                <div class="next-btn">
-                    <button type="button" class="btn-add" style="background-color: #666;" onclick="prevStep(2)">➡️
-                        السابق</button>
-                    <button type="button" class="btn-submit" onclick="nextStep(2)">التالي: الجرحى ⬅️</button>
+                <div class="next-btn" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-add" style="background-color: #757575; flex: 1;" onclick="prevStep(2)">➡️ السابق</button>
+                    <button type="button" class="btn-submit" style="flex: 2;" onclick="nextStep(2)">التالي: الجرحى ⬅️</button>
                 </div>
             </div>
 
-            <div id="step3" class="form-section">
-                <h3>3. الجرحى</h3>
+            <div id="step3" class="form-section" style="display: none;">
+                <h3 style="border-bottom: 2px solid #2196F3; padding-bottom: 10px;">3. الجرحى</h3>
                 <div id="injuredContainer"></div>
-
                 <button type="button" class="btn-add" onclick="addInjuredRow()">+ إضافة مصاب جديد</button>
                 <br><br>
-                <div class="next-btn">
-                    <button type="button" class="btn-add" style="background-color: #666;" onclick="prevStep(3)">➡️
-                        السابق</button>
-                    <button type="button" class="btn-submit" onclick="nextStep(3)">التالي: الشهداء ⬅️</button>
+                <div class="next-btn" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-add" style="background-color: #757575; flex: 1;" onclick="prevStep(3)">➡️ السابق</button>
+                    <button type="button" class="btn-submit" style="flex: 2;" onclick="nextStep(3)">التالي: الشهداء ⬅️</button>
                 </div>
             </div>
 
-            <div id="step4" class="form-section">
-                <h3>4. الشهداء</h3>
+            <div id="step4" class="form-section" style="display: none;">
+                <h3 style="border-bottom: 2px solid #2196F3; padding-bottom: 10px;">4. الشهداء</h3>
                 <div id="martyrsContainer"></div>
-
                 <button type="button" class="btn-add" onclick="addMartyrRow()">+ إضافة شهيد جديد</button>
                 <br><br>
-                <div class="next-btn">
-                    <button type="button" class="btn-add" style="background-color: #666;" onclick="prevStep(4)">➡️
-                        السابق</button>
-                    <button type="button" class="btn-submit" onclick="nextStep(4)">التالي: الطلاب ⬅️</button>
+                <div class="next-btn" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-add" style="background-color: #757575; flex: 1;" onclick="prevStep(4)">➡️ السابق</button>
+                    <button type="button" class="btn-submit" style="flex: 2;" onclick="nextStep(4)">التالي: الطلاب ⬅️</button>
                 </div>
             </div>
 
-            <div id="step5" class="form-section">
-                <h3>5. الطلاب الجامعيين</h3>
+            <div id="step5" class="form-section" style="display: none;">
+                <h3 style="border-bottom: 2px solid #2196F3; padding-bottom: 10px;">5. الطلاب الجامعيين</h3>
                 <div id="studentContainer"></div>
-
                 <button type="button" class="btn-add" onclick="addStudentRow()">+ إضافة طالب جديد</button>
                 <br><br>
-                <div class="next-btn">
-                    <button type="button" class="btn-add" style="background-color: #666;" onclick="prevStep(5)">➡️
-                        السابق</button>
-                    <button type="button" class="btn-submit" onclick="submitUpdates()"
-                        style="background-color: green;">💾 حفظ التعديلات النهائية</button>
+                <div class="next-btn" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-add" style="background-color: #757575; flex: 1;" onclick="prevStep(5)">➡️ السابق</button>
+                    <button type="button" class="btn-submit" onclick="submitUpdates()" style="background-color: #4CAF50; flex: 2;">💾 حفظ التعديلات النهائية</button>
                 </div>
             </div>
 
@@ -175,5 +165,4 @@
 
     <script src="JS/UpdateLogic.js"></script>
 </body>
-
 </html>

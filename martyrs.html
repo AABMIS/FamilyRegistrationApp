@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,22 +9,22 @@
 <body>
 
 <div class="container">
-    <h2>بيانات الشهداء</h2>
+    <h2>قسم الشهداء 🕊️</h2>
 
     <label>هل يوجد شهداء في العائلة؟</label>
     <select id="hasMartyrs" onchange="toggleMartyrs()">
         <option value="" selected disabled>اختر</option>
-        <option value="yes">نعم</option>
-        <option value="no">لا</option>
+        <option value="yes">نعم، يوجد</option>
+        <option value="no">لا يوجد</option>
     </select>
 
-    <div id="martyrsSection" style="display:none;">
+    <div id="martyrsSection" style="display:none; margin-top: 20px;">
         <div id="martyrsContainer"></div>
-        <button type="button" class="btn-add" onclick="addMartyr()">+ إضافة شهيد</button>
+        <button type="button" class="btn-add" onclick="addMartyr()" style="background-color: #2196F3; margin-bottom: 20px;">+ إضافة شهيد</button>
     </div>
 
     <br>
-    <button type="button" class="btn-submit" onclick="saveMartyrs()">الانتقال لقسم الطلاب</button>
+    <button type="button" class="btn-submit" id="submitBtn" onclick="saveMartyrs()">حفظ والانتقال لقسم الطلاب ⬅️</button>
 </div>
 
 <script src="JS/MartyrsLogic.js"></script>

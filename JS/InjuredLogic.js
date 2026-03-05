@@ -2,16 +2,41 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvO
 
 let injuredCount = 0;
 const maxInjured = 8;
+let generalData = null;
 
+// عند تحميل الصفحة، نتحقق من وجود بيانات رب الأسرة
+document.addEventListener("DOMContentLoaded", () => {
+    const storedData = localStorage.getItem("generalData");
+    if (!storedData) {
+        alert("⚠️ خطأ: لا توجد بيانات لرب الأسرة! يرجى العودة للصفحة الأولى وتعبئة البيانات.");
+        window.location.href = "index.html";
+        return;
+    }
+    generalData = JSON.parse(storedData);
+});
+
+// ==========================================
+// 1️⃣ إظهار أو إخفاء قسم المصابين
+// ==========================================
 function toggleInjured() {
     const choice = document.getElementById("hasInjured").value;
-    document.getElementById("injuredSection").style.display =
-        choice === "yes" ? "block" : "none";
+    const section = document.getElementById("injuredSection");
+    
+    if (choice === "yes") {
+        section.style.display = "block";
+        // إذا اختار نعم ولم يضف أحداً بعد، نضيف له بطاقة أولى تلقائياً
+        if (injuredCount === 0) addInjured();
+    } else {
+        section.style.display = "none";
+    }
 }
 
+// ==========================================
+// 2️⃣ إضافة بطاقة مصاب ديناميكية
+// ==========================================
 function addInjured() {
     if (injuredCount >= maxInjured) {
-        alert("الحد الأقصى 8 مصابين فقط");
+        alert("⚠️ الحد الأقصى المسموح به هو 8 مصابين فقط.");
         return;
     }
 
@@ -20,185 +45,191 @@ function addInjured() {
     const container = document.getElementById("injuredContainer");
     const div = document.createElement("div");
 
-    div.style.border = "1px solid #ccc";
-    div.style.padding = "15px";
-    div.style.marginBottom = "15px";
+    div.className = "injured-card";
+    div.style.border = "2px solid #ff9800";
+    div.style.padding = "20px";
+    div.style.marginBottom = "20px";
+    div.style.borderRadius = "8px";
+    div.style.backgroundColor = "#fff9f0"; // لون مميز لقسم المصابين
 
     div.innerHTML = `
-        <h4>المصاب رقم ${injuredCount}</h4>
+        <h3 style="margin-top:0; color:#e65100; border-bottom: 2px solid #ffcc80; padding-bottom: 10px;">🩹 المصاب رقم ${injuredCount}</h3>
 
-        <label>اسم المصاب</label>
-        <input type="text" class="injuredName" required>
+        <label>اسم المصاب رباعي</label>
+        <input type="text" class="injuredName" required placeholder="ادخل اسم المصاب">
 
-        <label>هوية المصاب</label>
-        <input type="text" class="injuredId" required>
+        <label>رقم هوية المصاب</label>
+        <input type="text" class="injuredId" placeholder="9 أرقام" inputmode="numeric" required>
 
         <label>رقم الجوال</label>
-        <input type="text" class="injuredPhone" required>
+        <input type="text" class="injuredPhone" placeholder="مثال: 0590000000" inputmode="numeric" required>
 
-        <label>نوع الإصابة</label>
-        <input type="text" class="injuredType" required>
+        <label>نوع الإصابة ومكانها</label>
+        <input type="text" class="injuredType" required placeholder="مثال: شظايا في القدم اليمنى">
 
         <label>تاريخ الإصابة</label>
         <input type="date" class="injuredDate" required>
+
+        <button type="button" class="btn-delete" onclick="removeInjured(this)" style="background-color:#ff4d4d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:15px;">🗑️ حذف المصاب</button>
     `;
 
     container.appendChild(div);
 }
+
+// ==========================================
+// 3️⃣ إزالة مصاب مع إعادة الترتيب
+// ==========================================
+function removeInjured(btn) {
+    btn.parentElement.remove();
+    injuredCount--;
+    // لا تقلق بشأن إعادة الترقيم في الشاشة، المهم هو البيانات المرسلة
+}
+
+// ==========================================
+// 4️⃣ الفلديشن الصارم والحفظ
+// ==========================================
 function saveInjured() {
-    // 1. ✅ التعديل هنا: جلب رقم الهوية من داخل الكائن generalData
-    const storedData = localStorage.getItem("generalData");
-    if (!storedData) {
-        alert("⚠️ خطأ: لا توجد بيانات للزوج! يرجى العودة للصفحة الأولى وتعبئة البيانات.");
+    if (!generalData || !generalData.husbandId) {
+        alert("⚠️ خطأ: رقم هوية رب الأسرة مفقود.");
         return;
     }
-    const generalData = JSON.parse(storedData);
-    const husbandId = generalData.husbandId; // الآن حصلنا على الرقم الصحيح
 
     const choice = document.getElementById("hasInjured").value;
-    const container = document.querySelectorAll("#injuredContainer > div");
-
-    // 2. التحقق من اختيار القائمة
+    
     if (choice === "") {
-        alert("⚠️ يرجى تحديد الخيار (نعم / لا) من القائمة أولاً.");
+        alert("⚠️ يرجى الإجابة على السؤال: هل يوجد مصابون؟");
         document.getElementById("hasInjured").focus();
         return;
     }
 
-    // 3. التحقق من اختيار "نعم" دون بيانات
-    if (choice === "yes" && container.length === 0) {
-        alert("⚠️ اخترت 'نعم' ولكن لم تضف مصابين.\nأضف مصاباً أو غير الخيار إلى 'لا'.");
+    // إذا اختار "لا"، ننتقل مباشرة للشهداء بدون تضييع وقت في الاتصال بالسيرفر!
+    if (choice === "no") {
+        window.location.href = "martyrs.html";
+        return;
+    }
+
+    const cards = document.querySelectorAll("#injuredContainer > .injured-card");
+
+    if (cards.length === 0) {
+        alert("⚠️ اخترت 'نعم' ولكنك لم تضف أي مصاب! يرجى إضافة مصاب أو تغيير الإجابة إلى 'لا'.");
         return;
     }
 
     const injured = [];
-    let isDataIncomplete = false;
+    const usedIds = new Set();
+    const today = new Date().toISOString().split("T")[0];
 
-    // 4. تجميع البيانات فقط إذا كان الخيار نعم
-    if (choice === "yes") {
-        container.forEach(div => {
-
-            const nameInp = div.querySelector(".injuredName");
-            const idInp = div.querySelector(".injuredId");
-            const phoneInp = div.querySelector(".injuredPhone");
-            const typeInp = div.querySelector(".injuredType");
-            const dateInp = div.querySelector(".injuredDate");
-
-            const valName = nameInp.value.trim();
-            const valId = idInp.value.trim();
-            const valPhone = phoneInp.value.trim();
-            const valType = typeInp.value.trim();
-            const valDate = dateInp.value;
-
-            [nameInp, idInp, phoneInp, typeInp, dateInp]
-                .forEach(inp => inp.style.border = "1px solid #ccc");
-
-            let hasError = false;
-
-            if (!valName) {
-                nameInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!/^[0-9]{9}$/.test(valId)) {
-                idInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!/^[0-9]{7,12}$/.test(valPhone)) {
-                phoneInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!valType) {
-                typeInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!valDate) {
-                dateInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (injured.some(x => x.id === valId)) {
-                idInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (hasError) {
-                isDataIncomplete = true;
+    // الفلديشن الصارم لكل مصاب
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        
+        // التحقق من الحقول الفارغة
+        const requiredInputs = card.querySelectorAll("input[required]");
+        for (let input of requiredInputs) {
+            if (input.value.trim() === "") {
+                let label = input.previousElementSibling ? input.previousElementSibling.innerText : "هذا الحقل";
+                alert(`في (المصاب رقم ${i + 1}): يرجى تعبئة ${label}`);
+                input.style.border = "2px solid red";
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                input.focus();
                 return;
+            } else {
+                input.style.border = "";
             }
+        }
 
-            injured.push({
-                name: valName,
-                id: valId,
-                phone: valPhone,
-                type: valType,
-                date: valDate
-            });
+        const vName = card.querySelector(".injuredName").value.trim();
+        const idInp = card.querySelector(".injuredId");
+        const vId = idInp.value.trim();
+        const phoneInp = card.querySelector(".injuredPhone");
+        const vPhone = phoneInp.value.trim();
+        const vType = card.querySelector(".injuredType").value.trim();
+        const dateInp = card.querySelector(".injuredDate");
+        const vDate = dateInp.value;
 
+        // فحص الهوية
+        if (!/^\d{9}$/.test(vId)) {
+            alert(`في (المصاب رقم ${i + 1}): رقم الهوية يجب أن يتكون من 9 أرقام.`);
+            idInp.style.border = "2px solid red";
+            idInp.focus();
+            return;
+        }
+
+        // فحص تكرار الهوية داخل نفس الفورم
+        if (usedIds.has(vId)) {
+            alert(`في (المصاب رقم ${i + 1}): رقم الهوية مكرر!`);
+            idInp.style.border = "2px solid red";
+            idInp.focus();
+            return;
+        }
+        usedIds.add(vId);
+
+        // فحص رقم الجوال
+        if (!/^05\d{8}$/.test(vPhone)) {
+            alert(`في (المصاب رقم ${i + 1}): رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام.`);
+            phoneInp.style.border = "2px solid red";
+            phoneInp.focus();
+            return;
+        }
+
+        // فحص التاريخ (يجب ألا يكون مستقبلياً)
+        if (vDate > today) {
+            alert(`في (المصاب رقم ${i + 1}): تاريخ الإصابة غير منطقي (لا يمكن أن يكون في المستقبل).`);
+            dateInp.style.border = "2px solid red";
+            dateInp.focus();
+            return;
+        }
+
+        injured.push({
+            name: vName,
+            id: vId,
+            phone: vPhone,
+            type: vType,
+            date: vDate
         });
     }
 
-    if (isDataIncomplete) {
-        alert("⚠️ يرجى تعبئة كافة الحقول المطلوبة باللون الأحمر.");
-        return;
-    }
-
-    // =================================================
-    // ✅ الحفظ والإرسال
-    // =================================================
-
-    const btn = document.querySelector("button[onclick='saveInjured()']");
+    // =========================================================
+    // 5️⃣ كل شيء سليم -> إرسال للسيرفر
+    // =========================================================
+    const btn = document.getElementById("submitBtn");
     const oldText = btn.innerText;
-    btn.innerText = "جاري الحفظ...";
+    btn.innerText = "جاري حفظ بيانات المصابين ⏳...";
     btn.disabled = true;
 
-    // لاحظ: نرسل husbandId المستخرج بشكل صحيح
     const payload = {
         action: "saveInjured",
-        husbandId: husbandId,
-        injured: choice === "yes" ? injured : []
+        husbandId: generalData.husbandId,
+        injured: injured
     };
-
-    if (!husbandId || !/^[0-9]{9}$/.test(String(husbandId))) {
-        alert("⚠️ رقم هوية رب الأسرة غير صالح");
-        return;
-    }
 
     fetch(SCRIPT_URL, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
     })
-        .then(response => response.json())
-        .then(data => {
-
-            if (data.status === "martyr") {
-                alert("❌ لا يمكن تسجيل هذا المصاب لأن رقم الهوية موجود في كشف الشهداء.");
+    .then(response => response.json())
+    .then(data => {
+        // فحص الردود بناءً على ملف Google Apps Script الخاص بك
+        if (data.status === "ok") {
+            // نجاح
+            window.location.href = "martyrs.html";
+        } else if (data.status === "error") {
+            if (data.msg === "DUPLICATE") {
+                alert("⚠️ خطأ: أحد المصابين الذين أدخلتهم مسجل مسبقاً في قاعدة البيانات!");
+            } else if (data.msg === "FAMILY_NOT_FOUND") {
+                alert("❌ خطأ: لم يتم العثور على العائلة الأساسية في قاعدة البيانات.");
+            } else {
+                alert("❌ خطأ من الخادم: " + data.msg);
             }
-
-            else if (data.status === "duplicate") {
-                alert("⚠️ هذا المصاب مسجل مسبقاً لنفس الأسرة.");
-            }
-
-            else if (data.status === "success") {
-                alert("✅ تم إرسال بيانات الجرحى بنجاح.");
-                window.location.href = "martyrs.html";
-                return;
-            }
-
             btn.innerText = oldText;
             btn.disabled = false;
-
-        })
-        .catch(err => {
-            console.error(err);
-            alert("❌ حدث خطأ أثناء محاولة الإرسال.");
-            btn.innerText = oldText;
-            btn.disabled = false;
-        });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("❌ حدث خطأ في الاتصال بالسيرفر. يرجى التأكد من الإنترنت والمحاولة.");
+        btn.innerText = oldText;
+        btn.disabled = false;
+    });
 }

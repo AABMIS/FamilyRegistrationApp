@@ -1,74 +1,66 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvOUbBDmHL6E0XBX_7d75jaF2n4TcAYPnj4akUU21Y-nwQFZ2pOg/exec";
 
-let childCount = 0;
-const maxChildren = 15;
-
+let generalData = null;
 let requiredChildrenCount = 0;
 
+// ==========================================
+// 1️⃣ عند تحميل الصفحة: الحركة السحرية لتوليد الأبناء
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     const storedData = localStorage.getItem("generalData");
-    if (!storedData) return;
+    
+    // إذا لم تكن هناك بيانات، أعده للصفحة الأولى
+    if (!storedData) {
+        alert("⚠️ البيانات العامة مفقودة! يرجى تعبئة الصفحة الأولى أولاً.");
+        window.location.href = "index.html";
+        return;
+    }
 
-    const generalData = JSON.parse(storedData);
-    const familyCount = parseInt(generalData.familyCount);
+    generalData = JSON.parse(storedData);
+    const familyCount = parseInt(generalData.familyCount) || 0;
+    
+    // حساب عدد الأبناء المطلوب (العدد الكلي - الزوجين)
+    requiredChildrenCount = familyCount - 2;
 
-    if (!isNaN(familyCount) && familyCount >= 2) {
-        requiredChildrenCount = familyCount - 2;
+    const container = document.getElementById("childrenContainer");
+    const noChildrenMsg = document.getElementById("noChildrenMessage");
+
+    if (requiredChildrenCount > 0) {
+        // توليد النماذج بعدد الأبناء
+        for (let i = 1; i <= requiredChildrenCount; i++) {
+            createChildCard(i, container);
+        }
+    } else {
+        // إذا كان العدد 0 أو أقل، إخفاء الحاوية وإظهار رسالة لطيفة
+        container.style.display = "none";
+        noChildrenMsg.style.display = "block";
     }
 });
 
-// إظهار/إخفاء القسم
-function toggleChildren() {
-    const choice = document.getElementById("hasChildren").value;
-
-    if (requiredChildrenCount > 0 && choice === "no") {
-        alert(`لديك ${requiredChildrenCount} أبناء مسجلين ضمن عدد العائلة. يجب إضافتهم.`);
-        document.getElementById("hasChildren").value = "";
-        return;
-    }
-
-    if (requiredChildrenCount === 0 && choice === "yes") {
-        alert("عدد أفراد العائلة لا يحتوي أبناء.");
-        document.getElementById("hasChildren").value = "";
-        return;
-    }
-
-    document.getElementById("childrenSection").style.display =
-        (choice === "yes") ? "block" : "none";
-}
-
-// إضافة ابن جديد
-function addChild() {
-
-    if (childCount >= requiredChildrenCount) {
-        alert(`يجب إضافة ${requiredChildrenCount} أبناء فقط.`);
-        return;
-    }
-
-    childCount++;
-
-    const container = document.getElementById("childrenContainer");
+// ==========================================
+// 2️⃣ دالة توليد بطاقة الابن (HTML ديناميكي)
+// ==========================================
+function createChildCard(index, container) {
     const div = document.createElement("div");
-
-    // تنسيق البطاقة
     div.className = "child-card";
-    div.style.border = "1px solid #ccc";
-    div.style.padding = "15px";
-    div.style.marginBottom = "15px";
+    div.style.border = "2px solid #ddd";
+    div.style.padding = "20px";
+    div.style.marginBottom = "20px";
     div.style.borderRadius = "8px";
-    div.style.backgroundColor = "#fff";
+    div.style.backgroundColor = "#fafafa";
 
     div.innerHTML = `
-        <h4 style="margin-top:0;">الابن رقم ${childCount}</h4>
+        <h3 style="margin-top:0; color:#333; border-bottom: 2px solid #ccc; padding-bottom: 10px;">👤 بيانات الابن رقم ${index}</h3>
 
         <label>اسم الابن رباعي</label>
-        <input type="text" class="childName" required>
+        <input type="text" class="childName" required placeholder="ادخل اسم الابن رباعي">
 
         <label>رقم هوية الابن</label>
         <input type="text" class="childId" placeholder="9 أرقام" inputmode="numeric" required>
 
         <label>جنس الابن</label>
         <select class="childGender" required>
+            <option value="" selected disabled>اختر</option>
             <option value="ذكر">ذكر</option>
             <option value="أنثى">أنثى</option>
         </select>
@@ -76,142 +68,122 @@ function addChild() {
         <label>تاريخ الميلاد</label>
         <input type="date" class="childBirth" required>
 
-        <label>هل يعاني من أمراض؟</label>
-        <select class="childIll"  required>
-          <option value="">اختر</option>
-          <option value="لا">لا</option>
-          <option value="نعم">نعم</option>
+        <label>هل يعاني من أمراض مزمنة أو إعاقة؟</label>
+        <select class="childIll" required onchange="toggleChildIllness(this)">
+            <option value="" selected disabled>اختر</option>
+            <option value="لا">لا</option>
+            <option value="نعم">نعم</option>
         </select>
 
-        <div class="illnessTypeWrapper" style="display:none;">
-          <label>نوع المرض</label>
-          <input type="text" class="childIllType">
+        <div class="illnessTypeWrapper" style="display:none; margin-top: 10px;">
+            <label>نوع المرض (إجباري إذا اخترت نعم)</label>
+            <input type="text" class="childIllType" disabled>
         </div>
-
-        <button type="button" class="btn-delete" onclick="this.parentElement.remove(); childCount--;" style="background-color:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
-    const illSelect = div.querySelector(".childIll");
-    const illWrapper = div.querySelector(".illnessTypeWrapper");
-    const illInput = illWrapper.querySelector(".childIllType");
-
-    illSelect.addEventListener("change", () => {
-        if (illSelect.value === "نعم") {
-            illWrapper.style.display = "block";
-            illInput.setAttribute("required", "true");
-        } else {
-            illWrapper.style.display = "none";
-            illInput.removeAttribute("required");
-            illInput.value = "";
-        }
-    });
     container.appendChild(div);
 }
 
-// الحفظ والإرسال
+// ==========================================
+// 3️⃣ تفعيل/إلغاء حقل المرض الخاص بكل ابن ديناميكياً
+// ==========================================
+function toggleChildIllness(selectEl) {
+    // نبحث عن أقرب بطاقة ابن (child-card) لتعديل حقل المرض الخاص بها فقط
+    const card = selectEl.closest('.child-card');
+    const wrapper = card.querySelector('.illnessTypeWrapper');
+    const inputEl = card.querySelector('.childIllType');
+
+    if (selectEl.value === "نعم") {
+        wrapper.style.display = "block";
+        inputEl.disabled = false;
+        inputEl.required = true;
+        inputEl.focus();
+    } else {
+        wrapper.style.display = "none";
+        inputEl.disabled = true;
+        inputEl.required = false;
+        inputEl.value = "";
+        inputEl.style.border = "";
+    }
+}
+
+// ==========================================
+// 4️⃣ الفلديشن الصارم وحفظ وإرسال البيانات
+// ==========================================
 function saveAll() {
-    // 1. التأكد من وجود البيانات العامة
-    const storedData = localStorage.getItem("generalData");
-    if (!storedData) {
-        alert("⚠️ خطأ: البيانات العامة مفقودة! يرجى العودة للبداية.");
-        return;
-    }
-    const generalData = JSON.parse(storedData);
-
-    if (!/^\d{9}$/.test(generalData.husbandId)) {
-        alert("خطأ في بيانات رب الأسرة");
+    // 1. فحص توفر البيانات العامة
+    if (!generalData) {
+        alert("⚠️ خطأ: البيانات العامة مفقودة! سيتم إعادتك للبداية.");
+        window.location.href = "index.html";
         return;
     }
 
-    const choice = document.getElementById("hasChildren").value;
-    const container = document.querySelectorAll("#childrenContainer > div");
-
-    // 2. التحقق من الاختيار
-    if (choice === "") {
-        alert("⚠️ يرجى تحديد الخيار (نعم / لا) أولاً.");
-        return;
-    }
-    // 3. تجميع البيانات والتحقق من النواقص
     const children = [];
-    let isDataIncomplete = false;
+    const usedIds = new Set();
+    const today = new Date().toISOString().split("T")[0];
+    
+    // إضافة هوية الأب والأم للمجموعة لمنع الابن من استخدام نفس الهوية!
+    usedIds.add(generalData.husbandId);
+    usedIds.add(generalData.wifeId);
 
-    if (choice === "yes") {
+    // 2. إذا كان هناك أبناء، نقوم بالفلديشن الصارم عليهم
+    if (requiredChildrenCount > 0) {
+        const cards = document.querySelectorAll(".child-card");
 
-        if (container.length === 0) {
-            alert("⚠️ اخترت 'نعم' ولكن لم تضف أي ابن.");
-            return;
-        }
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            
+            // جلب الحقول المطلوبة داخل البطاقة الحالية
+            const requiredInputs = card.querySelectorAll("input[required], select[required]");
+            
+            for (let input of requiredInputs) {
+                if (input.value.trim() === "") {
+                    let label = input.previousElementSibling ? input.previousElementSibling.innerText : "هذا الحقل";
+                    alert(`في (الابن رقم ${i + 1}): يرجى تعبئة ${label}`);
+                    input.style.border = "2px solid red";
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    input.focus();
+                    return; // إيقاف العملية فوراً
+                } else {
+                    input.style.border = "";
+                }
+            }
 
-        const usedIds = new Set();
-
-        container.forEach(div => {
-
-            const nameInp = div.querySelector(".childName");
-            const idInp = div.querySelector(".childId");
-            const genderInp = div.querySelector(".childGender");
-            const birthInp = div.querySelector(".childBirth");
-            const illInp = div.querySelector(".childIll");
-            const illTypeInp = div.querySelector(".childIllType");
-
-            const vName = nameInp.value.trim();
+            // جلب قيم الحقول للابن
+            const vName = card.querySelector(".childName").value.trim();
+            const idInp = card.querySelector(".childId");
             const vId = idInp.value.trim();
-            const vGender = genderInp.value;
+            const vGender = card.querySelector(".childGender").value;
+            const birthInp = card.querySelector(".childBirth");
             const vBirth = birthInp.value;
-            const vIll = illInp.value;
-            const vIllType = illTypeInp.value.trim();
+            const vIll = card.querySelector(".childIll").value;
+            const vIllType = card.querySelector(".childIllType").value.trim();
 
-            [nameInp, idInp, genderInp, birthInp, illInp, illTypeInp]
-                .forEach(el => el.style.border = "1px solid #ccc");
-
-            let hasError = false;
-
-            if (!vName) {
-                nameInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
+            // فحص صحة رقم الهوية (9 أرقام)
             if (!/^\d{9}$/.test(vId)) {
-                idInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!vGender) {
-                genderInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!vBirth) {
-                birthInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (!vIll) {
-                illInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (vIll === "نعم" && !vIllType) {
-                illTypeInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            const today = new Date().toISOString().split("T")[0];
-            if (vBirth && vBirth > today) {
-                birthInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (usedIds.has(vId)) {
-                idInp.style.border = "1px solid red";
-                hasError = true;
-            }
-
-            if (hasError) {
-                isDataIncomplete = true;
+                alert(`في (الابن رقم ${i + 1}): رقم الهوية غير صحيح، يجب أن يتكون من 9 أرقام.`);
+                idInp.style.border = "2px solid red";
+                idInp.focus();
                 return;
             }
 
+            // فحص عدم تكرار الهوية (سواء مع الأبناء أو الأبوين)
+            if (usedIds.has(vId)) {
+                alert(`في (الابن رقم ${i + 1}): رقم الهوية ${vId} مكرر! تم استخدامه مسبقاً لابن آخر أو للأبوين.`);
+                idInp.style.border = "2px solid red";
+                idInp.focus();
+                return;
+            }
             usedIds.add(vId);
 
+            // فحص تاريخ الميلاد (ليس في المستقبل)
+            if (vBirth > today) {
+                alert(`في (الابن رقم ${i + 1}): تاريخ الميلاد لا يمكن أن يكون في المستقبل.`);
+                birthInp.style.border = "2px solid red";
+                birthInp.focus();
+                return;
+            }
+
+            // إضافة بيانات الابن للمصفوفة
             children.push({
                 name: vName,
                 id: vId,
@@ -220,57 +192,53 @@ function saveAll() {
                 ill: vIll,
                 illType: vIllType
             });
-
-        });
+        }
     }
 
-    if (isDataIncomplete) {
-        alert("⚠️ يرجى تعبئة كافة الحقول المطلوبة.");
-        return;
-    }
-
-    if (choice === "yes" && container.length !== requiredChildrenCount) {
-        alert(`يجب إدخال ${requiredChildrenCount} أبناء بالضبط قبل المتابعة.`);
-        return;
-    }
-
-    // 4. الإرسال
-    const btn = document.querySelector(".btn-submit");
+    // =========================================================
+    // 3. كل شيء سليم 100% -> إرسال البيانات (Form 1 + Form 2)
+    // =========================================================
+    const btn = document.getElementById("submitBtn");
     const oldText = btn.innerText;
-    btn.innerText = "جاري الحفظ...";
+    btn.innerText = "جاري الحفظ في قاعدة البيانات ⏳...";
     btn.disabled = true;
 
-    // ملاحظة: نرسل husbandId الموجود في generalData لضمان الربط السليم
+    // تجهيز حزمة البيانات (Payload) حسب هيكلية السكربت الخاص بك
     const payload = {
         action: "registerFamily",
-        husband: generalData,
         husbandId: generalData.husbandId,
+        husband: generalData,
         children: children
     };
 
     fetch(SCRIPT_URL, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain;charset=utf-8" // استخدام text/plain لمنع مشاكل CORS أحياناً في Apps Script
         },
         body: JSON.stringify(payload)
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                alert("✅ تم إرسال البيانات بنجاح.");
-                window.location.href = "injured.html";
-                return;
-            }
-
+    .then(response => response.json())
+    .then(data => {
+        // بناءً على السكربت الخاص بك، النجاح يرجع { status: "ok" }
+        if (data.status === "ok") {
+            alert("✅ تم حفظ بيانات العائلة والأبناء بنجاح!");
+            // الانتقال للصفحة التالية
+            window.location.href = "injured.html"; 
+        } else if (data.status === "exists") {
+            alert("⚠️ عذراً، هذه العائلة (هذا الزوج) مسجلة مسبقاً في قاعدة البيانات!");
             btn.innerText = oldText;
             btn.disabled = false;
-
-        })
-        .catch(err => {
-            console.error(err);
-            alert("❌ حدث خطأ أثناء محاولة الإرسال.");
+        } else {
+            alert("❌ حدث خطأ من الخادم: " + (data.msg || "غير معروف"));
             btn.innerText = oldText;
             btn.disabled = false;
-        });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("❌ حدث خطأ في الاتصال بالخادم. يرجى التأكد من الإنترنت والمحاولة مرة أخرى.");
+        btn.innerText = oldText;
+        btn.disabled = false;
+    });
 }

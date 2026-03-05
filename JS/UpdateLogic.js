@@ -1,24 +1,58 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvOUbBDmHL6E0XBX_7d75jaF2n4TcAYPnj4akUU21Y-nwQFZ2pOg/exec";
-
-// متغير لتخزين البيانات الأصلية (لمقارنة التغييرات إن أردت لاحقاً)
 let originalData = {};
 
 // ==========================================
-// 1️⃣ دالة البحث وجلب البيانات
+// 1️⃣ دوال مساعدة
+// ==========================================
+function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+}
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || "";
+}
+
+function isValidId(id) {
+    return /^\d{9}$/.test(id);
+}
+
+// دالة التحكم في المرض (عامة للاستخدام في جميع الأقسام)
+function toggleIllness(selectId, inputId) {
+    const selectEl = typeof selectId === 'string' ? document.getElementById(selectId) : selectId;
+    const inputEl = typeof inputId === 'string' ? document.getElementById(inputId) : inputId;
+    
+    if (selectEl.value === "نعم") {
+        inputEl.disabled = false;
+        inputEl.required = true;
+    } else {
+        inputEl.disabled = true;
+        inputEl.required = false;
+        inputEl.value = "";
+        inputEl.style.border = "";
+    }
+}
+
+// ==========================================
+// 2️⃣ دالة البحث وجلب البيانات
 // ==========================================
 async function fetchData() {
-    const id = document.getElementById("searchId").value.trim();
+    const id = getVal("searchId");
     const msg = document.getElementById("msg");
     const formSection = document.getElementById("updateFormSection");
+    const btn = document.getElementById("searchBtn");
 
-    if (id.length < 9) {
-        alert("يرجى إدخال رقم هوية صحيح (9 أرقام)");
+    if (!isValidId(id)) {
+        alert("❌ يرجى إدخال رقم هوية صحيح (9 أرقام).");
         return;
     }
 
     msg.style.display = "block";
-    msg.innerText = "جاري البحث...";
+    msg.innerText = "جاري البحث في قاعدة البيانات ⏳...";
+    msg.style.color = "#2196F3";
     formSection.style.display = "none";
+    btn.disabled = true;
 
     try {
         const response = await fetch(`${SCRIPT_URL}?action=getAllData&id=${id}`);
@@ -27,42 +61,38 @@ async function fetchData() {
         if (data.found) {
             msg.style.display = "none";
             formSection.style.display = "block";
-            originalData = data; // حفظ نسخة
-
-            // تعبئة البيانات
+            originalData = data;
             populateForm(data);
-            alert("✅ تم جلب البيانات بنجاح، يمكنك التعديل الآن.");
+            alert("✅ تم جلب البيانات بنجاح. يمكنك التعديل الآن والتنقل بين الأقسام.");
         } else {
             msg.innerText = "❌ الرقم غير موجود في السجلات.";
             msg.style.color = "red";
         }
     } catch (error) {
         console.error(error);
-        msg.innerText = "حدث خطأ في الاتصال بالسيرفر.";
+        msg.innerText = "❌ حدث خطأ في الاتصال بالسيرفر.";
         msg.style.color = "red";
+    } finally {
+        btn.disabled = false;
     }
 }
 
 // ==========================================
-// 2️⃣ دالة تعبئة النموذج (Populate Form)
+// 3️⃣ تعبئة النموذج بالبيانات القادمة
 // ==========================================
 function populateForm(data) {
     const f = data.family;
 
-    // 1. تعبئة بيانات الأب (القسم العام)
+    // 1. القسم العام
     setVal("husbandId", f.husbandId);
     setVal("husbandName", f.husbandName);
     setVal("husbandBirth", f.husbandBirth);
     setVal("status", f.status);
     setVal("phone", f.phone);
     setVal("altPhone", f.altPhone);
-    setVal("husbandIll", f.husbandIll);
-    setVal("husbandIllType", f.husbandIllType);
     setVal("wifeName", f.wifeName);
     setVal("wifeId", f.wifeId);
     setVal("wifeBirth", f.wifeBirth);
-    setVal("wifeIll", f.wifeIll);
-    setVal("wifeIllType", f.wifeIllType);
     setVal("familyCount", f.familyCount);
     setVal("maleCount", f.maleCount);
     setVal("femaleCount", f.femaleCount);
@@ -71,149 +101,208 @@ function populateForm(data) {
     setVal("work", f.work);
     setVal("medicalNeeds", f.medicalNeeds);
 
-    // 2. تعبئة الأبناء
-    const childrenContainer = document.getElementById("childrenContainer");
-    childrenContainer.innerHTML = ""; // تنظيف القديم
-    if (data.children && data.children.length > 0) {
-        data.children.forEach(child => addChildRow(child));
-    } else {
-        // إضافة صف فارغ إذا لم يوجد أبناء
-        // addChildRow(); 
-    }
+    // تفعيل الأمراض برمجياً إذا كانت "نعم"
+    setVal("husbandIll", f.husbandIll);
+    toggleIllness('husbandIll', 'husbandIllType');
+    setVal("husbandIllType", f.husbandIllType);
 
-    // 3. تعبئة الجرحى
-    const injuredContainer = document.getElementById("injuredContainer");
-    injuredContainer.innerHTML = "";
-    if (data.injured && data.injured.length > 0) {
-        data.injured.forEach(item => addInjuredRow(item));
-    }
+    setVal("wifeIll", f.wifeIll);
+    toggleIllness('wifeIll', 'wifeIllType');
+    setVal("wifeIllType", f.wifeIllType);
 
-    // 4. تعبئة الشهداء
-    const martyrsContainer = document.getElementById("martyrsContainer");
-    martyrsContainer.innerHTML = "";
-    if (data.martyrs && data.martyrs.length > 0) {
-        data.martyrs.forEach(item => addMartyrRow(item));
-    }
+    // 2. تفريغ وتعبئة القوائم الديناميكية
+    document.getElementById("childrenContainer").innerHTML = "";
+    if (data.children) data.children.forEach(child => addChildRow(child));
 
-    // 5. تعبئة الطلاب
-    const studentContainer = document.getElementById("studentContainer");
-    studentContainer.innerHTML = "";
-    if (data.students && data.students.length > 0) {
-        data.students.forEach(item => addStudentRow(item));
+    document.getElementById("injuredContainer").innerHTML = "";
+    if (data.injured) data.injured.forEach(item => addInjuredRow(item));
+
+    document.getElementById("martyrsContainer").innerHTML = "";
+    if (data.martyrs) data.martyrs.forEach(item => addMartyrRow(item));
+
+    document.getElementById("studentContainer").innerHTML = "";
+    if (data.students) data.students.forEach(item => addStudentRow(item));
+    
+    // إرجاع المستخدم للخطوة الأولى دائماً عند بحث جديد
+    for(let i=1; i<=5; i++) {
+        document.getElementById(`step${i}`).style.display = i === 1 ? "block" : "none";
     }
 }
 
-// دالة مساعدة لتعيين القيمة
-function setVal(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.value = val || "";
-}
-
 // ==========================================
-// 3️⃣ دوال إضافة الصفوف (ديناميكية)
+// 4️⃣ دوال إنشاء الصفوف الديناميكية (مع توافق الأمراض)
 // ==========================================
-
-// --- إضافة ابن ---
 function addChildRow(data = {}) {
     const container = document.getElementById("childrenContainer");
     const div = document.createElement("div");
-    div.className = "child-row border-box";
+    div.className = "child-row";
+    div.style.cssText = "border: 2px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
+    
     div.innerHTML = `
-        <h4>بيانات الابن</h4>
-        <label>الاسم:</label> <input type="text" class="cName" value="${data.name || ''}">
-        <label>الهوية:</label> <input type="number" class="cId" value="${data.id || ''}">
+        <h4 style="margin-top:0; border-bottom:1px solid #ccc; padding-bottom:5px;">👤 بيانات الابن</h4>
+        <label>الاسم رباعي:</label> <input type="text" class="cName" value="${data.name || ''}" required>
+        <label>الهوية:</label> <input type="text" class="cId" inputmode="numeric" value="${data.id || ''}" required>
         <label>الجنس:</label> 
-        <select class="cGender">
+        <select class="cGender" required>
             <option value="ذكر" ${data.gender === 'ذكر' ? 'selected' : ''}>ذكر</option>
             <option value="أنثى" ${data.gender === 'أنثى' ? 'selected' : ''}>أنثى</option>
         </select>
-        <label>الميلاد:</label> <input type="date" class="cBirth" value="${data.birth || ''}">
+        <label>الميلاد:</label> <input type="date" class="cBirth" value="${data.birth || ''}" required>
         <label>مريض؟:</label> 
-        <select class="cIll">
+        <select class="cIll" required onchange="toggleIllness(this, this.nextElementSibling.nextElementSibling)">
             <option value="لا" ${data.ill === 'لا' ? 'selected' : ''}>لا</option>
             <option value="نعم" ${data.ill === 'نعم' ? 'selected' : ''}>نعم</option>
         </select>
-        <label>نوع المرض:</label> <input type="text" class="cIllType" value="${data.illType || ''}">
-        <button type="button" class="btn-delete" onclick="this.parentElement.remove()">🗑️ حذف</button>
+        <label>نوع المرض:</label> <input type="text" class="cIllType" value="${data.illType || ''}" ${data.ill === 'نعم' ? 'required' : 'disabled'}>
+        <button type="button" class="btn-delete" onclick="this.parentElement.remove()" style="background:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
     container.appendChild(div);
 }
 
-// --- إضافة جريح ---
 function addInjuredRow(data = {}) {
     const container = document.getElementById("injuredContainer");
     const div = document.createElement("div");
-    div.className = "injured-row border-box";
+    div.className = "injured-row";
+    div.style.cssText = "border: 2px solid #ff9800; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
+    
     div.innerHTML = `
-        <h4>بيانات المصاب</h4>
-        <label>الاسم:</label> <input type="text" class="iName" value="${data.name || ''}">
-        <label>الهوية:</label> <input type="number" class="iId" value="${data.id || ''}">
-        <label>الجوال:</label> <input type="number" class="iPhone" value="${data.phone || ''}">
-        <label>نوع الإصابة:</label> <input type="text" class="iType" value="${data.type || ''}">
-        <label>تاريخ الإصابة:</label> <input type="date" class="iDate" value="${data.date || ''}">
-        <button type="button" class="btn-delete" onclick="this.parentElement.remove()">🗑️ حذف</button>
+        <h4 style="margin-top:0; border-bottom:1px solid #ffcc80; padding-bottom:5px; color:#e65100;">🩹 بيانات المصاب</h4>
+        <label>الاسم:</label> <input type="text" class="iName" value="${data.name || ''}" required>
+        <label>الهوية:</label> <input type="text" class="iId" inputmode="numeric" value="${data.id || ''}" required>
+        <label>الجوال:</label> <input type="text" class="iPhone" inputmode="numeric" value="${data.phone || ''}" required>
+        <label>نوع الإصابة:</label> <input type="text" class="iType" value="${data.type || ''}" required>
+        <label>تاريخ الإصابة:</label> <input type="date" class="iDate" value="${data.date || ''}" required>
+        <button type="button" class="btn-delete" onclick="this.parentElement.remove()" style="background:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
     container.appendChild(div);
 }
 
-// --- إضافة شهيد ---
 function addMartyrRow(data = {}) {
     const container = document.getElementById("martyrsContainer");
     const div = document.createElement("div");
-    div.className = "martyr-row border-box";
+    div.className = "martyr-row";
+    div.style.cssText = "border: 2px solid #9e9e9e; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
+    
     div.innerHTML = `
-        <h4>بيانات الشهيد</h4>
-        <label>الاسم:</label> <input type="text" class="mName" value="${data.name || ''}">
-        <label>الهوية:</label> <input type="number" class="mId" value="${data.id || ''}">
-        <label>تاريخ الاستشهاد:</label> <input type="date" class="mDate" value="${data.date || ''}">
-        <label>صلة القرابة:</label> <input type="text" class="mRel" value="${data.rel || ''}">
-        <button type="button" class="btn-delete" onclick="this.parentElement.remove()">🗑️ حذف</button>
+        <h4 style="margin-top:0; border-bottom:1px solid #bdbdbd; padding-bottom:5px; color:#424242;">🕊️ بيانات الشهيد</h4>
+        <label>الاسم:</label> <input type="text" class="mName" value="${data.name || ''}" required>
+        <label>الهوية:</label> <input type="text" class="mId" inputmode="numeric" value="${data.id || ''}" required>
+        <label>تاريخ الاستشهاد:</label> <input type="date" class="mDate" value="${data.date || ''}" required>
+        <label>صلة القرابة:</label> 
+        <select class="mRel" required>
+            <option value="أب" ${data.rel === 'أب' ? 'selected' : ''}>أب</option>
+            <option value="أم" ${data.rel === 'أم' ? 'selected' : ''}>أم</option>
+            <option value="زوج/ة" ${data.rel === 'زوج/ة' ? 'selected' : ''}>زوج/ة</option>
+            <option value="ابن/ة" ${data.rel === 'ابن/ة' ? 'selected' : ''}>ابن/ة</option>
+            <option value="أخ/أخت" ${data.rel === 'أخ/أخت' ? 'selected' : ''}>أخ/أخت</option>
+            <option value="أقارب" ${data.rel === 'أقارب' ? 'selected' : ''}>أقارب</option>
+        </select>
+        <button type="button" class="btn-delete" onclick="this.parentElement.remove()" style="background:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
     container.appendChild(div);
 }
 
-// --- إضافة طالب ---
 function addStudentRow(data = {}) {
     const container = document.getElementById("studentContainer");
     const div = document.createElement("div");
-    div.className = "student-row border-box";
+    div.className = "student-row";
+    div.style.cssText = "border: 2px solid #4CAF50; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
+    
     div.innerHTML = `
-        <h4>بيانات الطالب</h4>
-        <label>الاسم:</label> <input type="text" class="sName" value="${data.name || ''}">
-        <label>الهوية:</label> <input type="number" class="sId" value="${data.id || ''}">
-        <label>الجوال:</label> <input type="number" class="sPhone" value="${data.phone || ''}">
-        <label>الرقم الجامعي:</label> <input type="text" class="sUid" value="${data.uId || ''}">
-        <label>التخصص:</label> <input type="text" class="sMajor" value="${data.major || ''}">
-        <label>المستوى:</label> <input type="text" class="sLevel" value="${data.level || ''}">
-        <label>الجامعة:</label> <input type="text" class="sUniv" value="${data.univ || ''}">
-        <button type="button" class="btn-delete" onclick="this.parentElement.remove()">🗑️ حذف</button>
+        <h4 style="margin-top:0; border-bottom:1px solid #a5d6a7; padding-bottom:5px; color:#2e7d32;">🎓 بيانات الطالب</h4>
+        <label>الاسم:</label> <input type="text" class="sName" value="${data.name || ''}" required>
+        <label>الهوية:</label> <input type="text" class="sId" inputmode="numeric" value="${data.id || ''}" required>
+        <label>الجوال:</label> <input type="text" class="sPhone" inputmode="numeric" value="${data.phone || ''}" required>
+        <label>الجامعة:</label> <input type="text" class="sUniv" value="${data.univ || ''}" required>
+        <label>الرقم الجامعي:</label> <input type="text" class="sUid" value="${data.uId || ''}" required>
+        <label>التخصص:</label> <input type="text" class="sMajor" value="${data.major || ''}" required>
+        <label>المستوى:</label> 
+        <select class="sLevel" required>
+            <option value="${data.level || ''}" selected hidden>${data.level || 'اختر'}</option>
+            <option value="دبلوم">دبلوم</option>
+            <option value="سنة أولى">سنة أولى</option>
+            <option value="سنة ثانية">سنة ثانية</option>
+            <option value="سنة ثالثة">سنة ثالثة</option>
+            <option value="سنة رابعة">سنة رابعة</option>
+            <option value="سنة خامسة">سنة خامسة</option>
+            <option value="سنة سادسة">سنة سادسة</option>
+            <option value="دراسات عليا">دراسات عليا</option>
+        </select>
+        <button type="button" class="btn-delete" onclick="this.parentElement.remove()" style="background:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
     container.appendChild(div);
 }
 
 // ==========================================
-// 4️⃣ دالة التنقل بين الخطوات (Next/Prev)
+// 5️⃣ فلديشن الخطوات والتنقل
 // ==========================================
+function validateStep(stepNum) {
+    const currentSection = document.getElementById(`step${stepNum}`);
+    const requiredInputs = currentSection.querySelectorAll("input[required], select[required]");
+    
+    for (let input of requiredInputs) {
+        if (input.value.trim() === "") {
+            alert("⚠️ يرجى تعبئة جميع الحقول الإجبارية قبل الانتقال للخطوة التالية.");
+            input.style.border = "2px solid red";
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            input.focus();
+            return false;
+        } else {
+            input.style.border = "";
+        }
+    }
+
+    // فلديشن مخصص للخطوة الأولى (الأساسية)
+    if (stepNum === 1) {
+        const phone = getVal("phone");
+        const wifeId = getVal("wifeId");
+        
+        if (!/^05\d{8}$/.test(phone)) {
+            alert("❌ رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام.");
+            return false;
+        }
+        if (!isValidId(wifeId)) {
+            alert("❌ رقم هوية الزوجة غير صحيح.");
+            return false;
+        }
+        
+        const total = Number(getVal("familyCount"));
+        const male = Number(getVal("maleCount"));
+        const female = Number(getVal("femaleCount"));
+        if (male + female !== total) {
+            alert("❌ عدد الذكور والإناث لا يساوي العدد الكلي لأفراد الأسرة.");
+            return false;
+        }
+    }
+
+    return true; // إذا نجح الفحص
+}
+
 function nextStep(current) {
-    document.getElementById(`step${current}`).style.display = "none"; // إخفاء الحالي
-    document.getElementById(`step${current + 1}`).style.display = "block"; // إظهار التالي
+    if (!validateStep(current)) return; // لا ينتقل إذا كان هناك خطأ
+    document.getElementById(`step${current}`).style.display = "none";
+    document.getElementById(`step${current + 1}`).style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function prevStep(current) {
     document.getElementById(`step${current}`).style.display = "none";
     document.getElementById(`step${current - 1}`).style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==========================================
-// 5️⃣ دالة الحفظ النهائي (Submit Updates)
+// 6️⃣ الحفظ النهائي
 // ==========================================
 async function submitUpdates() {
+    if (!validateStep(5)) return; // فحص الخطوة الأخيرة قبل الحفظ
+
     const btn = document.querySelector("button[onclick='submitUpdates()']");
-    btn.innerText = "جاري الحفظ...";
+    const originalText = btn.innerText;
+    btn.innerText = "جاري رفع التعديلات للسيرفر ⏳...";
     btn.disabled = true;
 
     try {
-        // 1. تجميع بيانات الأب
         const husbandData = {
             husbandId: getVal("husbandId"),
             husbandName: getVal("husbandName"),
@@ -237,7 +326,6 @@ async function submitUpdates() {
             medicalNeeds: getVal("medicalNeeds")
         };
 
-        // 2. تجميع الأبناء
         const children = Array.from(document.querySelectorAll("#childrenContainer .child-row")).map(row => ({
             name: row.querySelector(".cName").value,
             id: row.querySelector(".cId").value,
@@ -247,7 +335,6 @@ async function submitUpdates() {
             illType: row.querySelector(".cIllType").value
         }));
 
-        // 3. تجميع الجرحى
         const injured = Array.from(document.querySelectorAll("#injuredContainer .injured-row")).map(row => ({
             name: row.querySelector(".iName").value,
             id: row.querySelector(".iId").value,
@@ -256,15 +343,13 @@ async function submitUpdates() {
             date: row.querySelector(".iDate").value
         }));
 
-        // 4. تجميع الشهداء
-        const martyrs = Array.from(document.querySelectorAll("#martyrsContainer .martyr-row")).map(row => ({
+        const martyrs = Array.from(document.querySelectorAll("#mart शहीيدContainer .martyr-row")).map(row => ({
             name: row.querySelector(".mName").value,
             id: row.querySelector(".mId").value,
             date: row.querySelector(".mDate").value,
             rel: row.querySelector(".mRel").value
         }));
 
-        // 5. تجميع الطلاب
         const students = Array.from(document.querySelectorAll("#studentContainer .student-row")).map(row => ({
             name: row.querySelector(".sName").value,
             id: row.querySelector(".sId").value,
@@ -275,7 +360,6 @@ async function submitUpdates() {
             univ: row.querySelector(".sUniv").value
         }));
 
-        // 6. الإرسال
         const payload = {
             action: "updateAll",
             husbandId: husbandData.husbandId,
@@ -288,31 +372,26 @@ async function submitUpdates() {
 
         const response = await fetch(SCRIPT_URL, {
             method: "POST", 
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "text/plain;charset=utf-8" }, // تم التعديل لتجنب CORS
             body: JSON.stringify(payload)
         });
 
         const result = await response.json();
 
         if (result.status === "success") {
-            alert("✅ تم تعديل البيانات بنجاح.");
-            window.location.href = "index.html";
+            alert("✅ تم إرسال طلب التعديل بنجاح.");
+            // تذكير بالمشكلة الموجودة في الباك-إند
+            alert("ملاحظة: حسب برمجة السيرفر الحالية، تم تحديث بيانات العائلة الأساسية فقط. (يرجى مراجعة الباك-إند لتحديث الكشوفات الفرعية).");
+            window.location.reload(); // إعادة تحميل الصفحة للبحث من جديد
         } else {
-            throw new Error(result.msg || "فشل التحديث");
+            throw new Error(result.msg || "فشل التحديث من السيرفر");
         }
 
     } catch (error) {
         console.error(error);
         alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
-        btn.innerText = "💾 حفظ التعديلات النهائية";
+    } finally {
+        btn.innerText = originalText;
         btn.disabled = false;
     }
-}
-
-// دالة مساعدة لجلب القيم
-function getVal(id) {
-    const el = document.getElementById(id);
-    return el ? el.value.trim() : "";
 }

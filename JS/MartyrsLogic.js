@@ -2,81 +2,118 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvO
 
 let martyrCount = 0;
 const maxMartyrs = 10;
+let generalData = null;
 
-// إظهار/إخفاء القسم
+// ==========================================
+// 1️⃣ جلب بيانات رب الأسرة عند تحميل الصفحة
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    const storedData = localStorage.getItem("generalData");
+    if (!storedData) {
+        alert("⚠️ خطأ: بيانات رب الأسرة مفقودة! يرجى العودة للصفحة الأولى.");
+        window.location.href = "index.html";
+        return;
+    }
+    generalData = JSON.parse(storedData);
+});
+
+// ==========================================
+// 2️⃣ إظهار/إخفاء القسم مع إضافة تلقائية
+// ==========================================
 function toggleMartyrs() {
     const choice = document.getElementById("hasMartyrs").value;
     const section = document.getElementById("martyrsSection");
-    section.style.display = (choice === "yes") ? "block" : "none";
+    
+    if (choice === "yes") {
+        section.style.display = "block";
+        if (martyrCount === 0) addMartyr(); // حركة سحرية: فتح أول بطاقة تلقائياً
+    } else {
+        section.style.display = "none";
+    }
 }
 
-// إضافة شهيد جديد
+// ==========================================
+// 3️⃣ إضافة شهيد جديد
+// ==========================================
 function addMartyr() {
     if (martyrCount >= maxMartyrs) {
-        alert("الحد الأقصى 10 شهداء فقط");
+        alert("⚠️ الحد الأقصى المسموح به 10 شهداء فقط.");
         return;
     }
     martyrCount++;
 
     const container = document.getElementById("martyrsContainer");
     const div = document.createElement("div");
-    div.classList.add("card-item");
-    div.style.marginBottom = "15px";
-    div.style.padding = "10px";
-    div.style.border = "1px solid #ddd";
+    div.className = "martyr-card";
+    div.style.border = "2px solid #9e9e9e";
+    div.style.padding = "20px";
+    div.style.marginBottom = "20px";
+    div.style.borderRadius = "8px";
+    div.style.backgroundColor = "#fafafa";
 
     div.innerHTML = `
-        <h4>الشهيد رقم ${martyrCount}</h4>
+        <h3 style="margin-top:0; color:#424242; border-bottom: 2px solid #bdbdbd; padding-bottom: 10px;">🕊️ الشهيد رقم ${martyrCount}</h3>
         
         <label>اسم الشهيد رباعي</label>
-        <input type="text" class="mName" placeholder="الاسم رباعي">
+        <input type="text" class="mName" required placeholder="الاسم رباعي">
 
         <label>رقم هوية الشهيد</label>
-        <input type="number" class="mId" placeholder="9 أرقام">
+        <input type="text" class="mId" placeholder="9 أرقام" inputmode="numeric" required>
 
         <label>تاريخ الاستشهاد</label>
-        <input type="date" class="mDate">
+        <input type="date" class="mDate" required>
 
-        <label>صلة القرابة</label>
-        <select class="mRel">
-            <option value="">اختر</option>
-            <option>أب</option>
-            <option>أم</option>
-            <option>زوج/ة</option>
-            <option>ابن/ة</option>
-            <option>أخ/أخت</option>
-            <option> اقارب</option>
+        <label>صلة القرابة برب الأسرة</label>
+        <select class="mRel" required>
+            <option value="" selected disabled>اختر</option>
+            <option value="أب">أب</option>
+            <option value="أم">أم</option>
+            <option value="زوج/ة">زوج/ة</option>
+            <option value="ابن/ة">ابن/ة</option>
+            <option value="أخ/أخت">أخ/أخت</option>
+            <option value="أقارب">أقارب</option>
         </select>
+
+        <button type="button" class="btn-delete" onclick="removeMartyr(this)" style="background-color:#ff4d4d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:15px;">🗑️ حذف الشهيد</button>
     `;
     container.appendChild(div);
 }
 
+// ==========================================
+// 4️⃣ حذف شهيد
+// ==========================================
+function removeMartyr(btn) {
+    btn.parentElement.remove();
+    martyrCount--;
+}
+
+// ==========================================
+// 5️⃣ الفلديشن الصارم والحفظ
+// ==========================================
 function saveMartyrs() {
-
-    const rawData = localStorage.getItem("generalData");
-
-    if (!rawData) {
-        alert("⚠️ بيانات رب الأسرة مفقودة!");
+    if (!generalData || !generalData.husbandId) {
+        alert("⚠️ بيانات رب الأسرة مفقودة! لا يمكن الحفظ.");
         return;
     }
-
-    const generalData = JSON.parse(rawData);
 
     const choice = document.getElementById("hasMartyrs").value;
-    const container = document.querySelectorAll("#martyrsContainer > div");
 
     if (choice === "") {
-        alert("⚠️ اختر نعم أو لا أولاً");
+        alert("⚠️ يرجى الإجابة على السؤال: هل يوجد شهداء؟");
+        document.getElementById("hasMartyrs").focus();
         return;
     }
 
+    // الانتقال السريع بدون إنترنت إذا كان الخيار "لا"
     if (choice === "no") {
         window.location.href = "student.html";
         return;
     }
 
-    if (choice === "yes" && container.length === 0) {
-        alert("⚠️ يجب إضافة شهيد واحد على الأقل");
+    const cards = document.querySelectorAll("#martyrsContainer > .martyr-card");
+
+    if (cards.length === 0) {
+        alert("⚠️ اخترت 'نعم' ولكنك لم تضف أي شهيد.");
         return;
     }
 
@@ -84,101 +121,105 @@ function saveMartyrs() {
     const usedIds = new Set();
     const today = new Date().toISOString().split("T")[0];
 
-    let hasError = false;
+    // تم تغيير forEach إلى for loop العادية لكي يعمل الفلديشن والـ return بشكل صحيح!
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
 
-    container.forEach(div => {
+        // 1. التحقق من الحقول المطلوبة
+        const requiredInputs = card.querySelectorAll("input[required], select[required]");
+        for (let input of requiredInputs) {
+            if (input.value.trim() === "") {
+                let label = input.previousElementSibling ? input.previousElementSibling.innerText : "هذا الحقل";
+                alert(`في (الشهيد رقم ${i + 1}): يرجى تعبئة ${label}`);
+                input.style.border = "2px solid red";
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                input.focus();
+                return; // الآن الـ return ستوقف العملية بالكامل
+            } else {
+                input.style.border = "";
+            }
+        }
 
-        const nameInp = div.querySelector(".mName");
-        const idInp = div.querySelector(".mId");
-        const dateInp = div.querySelector(".mDate");
-        const relInp = div.querySelector(".mRel");
-
-        const vName = nameInp.value.trim();
+        const vName = card.querySelector(".mName").value.trim();
+        const idInp = card.querySelector(".mId");
         const vId = idInp.value.trim();
+        const dateInp = card.querySelector(".mDate");
         const vDate = dateInp.value;
-        const vRel = relInp.value;
+        const vRel = card.querySelector(".mRel").value;
 
-        [nameInp, idInp, dateInp, relInp].forEach(el =>
-            el.style.border = "1px solid #ccc"
-        );
-
-        if (
-            !vName ||
-            !vId ||
-            !vDate ||
-            !vRel ||
-            !/^\d{9}$/.test(vId) ||
-            vDate > today
-        ) {
-            hasError = true;
-
-            if (!vName) nameInp.style.border = "1px solid red";
-            if (!vId || !/^\d{9}$/.test(vId)) idInp.style.border = "1px solid red";
-            if (!vDate || vDate > today) dateInp.style.border = "1px solid red";
-            if (!vRel) relInp.style.border = "1px solid red";
-
+        // 2. التحقق من رقم الهوية
+        if (!/^\d{9}$/.test(vId)) {
+            alert(`في (الشهيد رقم ${i + 1}): رقم الهوية يجب أن يكون 9 أرقام.`);
+            idInp.style.border = "2px solid red";
+            idInp.focus();
             return;
         }
 
+        // 3. منع التكرار داخل نفس الفورم
         if (usedIds.has(vId)) {
-            alert("❌ يوجد تكرار في رقم هوية أحد الشهداء");
-            hasError = true;
-            idInp.style.border = "1px solid red";
+            alert(`في (الشهيد رقم ${i + 1}): رقم الهوية مكرر!`);
+            idInp.style.border = "2px solid red";
+            idInp.focus();
             return;
         }
-
         usedIds.add(vId);
+
+        // 4. فحص التاريخ
+        if (vDate > today) {
+            alert(`في (الشهيد رقم ${i + 1}): تاريخ الاستشهاد لا يمكن أن يكون في المستقبل.`);
+            dateInp.style.border = "2px solid red";
+            dateInp.focus();
+            return;
+        }
 
         martyrs.push({
             name: vName,
             id: vId,
             date: vDate,
-            rel: vRel,
-            phone: generalData.phone
+            rel: vRel
         });
-
-    });
-
-    if (hasError) {
-        alert("⚠️ يجب تعبئة جميع بيانات الشهداء بشكل كامل وصحيح");
-        return;
     }
 
-    const btn = document.querySelector(".btn-submit");
+    // ==========================================
+    // 6️⃣ كل شيء سليم -> إرسال للسيرفر
+    // ==========================================
+    const btn = document.getElementById("submitBtn");
     const oldText = btn.innerText;
-
-    btn.innerText = "جاري الحفظ...";
+    btn.innerText = "جاري حفظ بيانات الشهداء ⏳...";
     btn.disabled = true;
 
     const payload = {
         action: "saveMartyrs",
-        husbandName: generalData.husbandName,
         husbandId: generalData.husbandId,
         martyrs: martyrs
     };
 
     fetch(SCRIPT_URL, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "success") {
-                alert("✅ تم إرسال البيانات بنجاح.");
-                window.location.href = "student.html";
-                return;
+    .then(response => response.json())
+    .then(data => {
+        // فحص حالة النجاح بناءً على السكربت الخاص بك
+        if (data.status === "ok") {
+            window.location.href = "student.html";
+        } else if (data.status === "error") {
+            if (data.msg === "DUPLICATE") {
+                alert("⚠️ عذراً، هذا الشهيد مسجل مسبقاً في قاعدة البيانات!");
+            } else if (data.msg === "FAMILY_NOT_FOUND") {
+                alert("❌ خطأ: لم يتم العثور على العائلة الأساسية في قاعدة البيانات.");
+            } else {
+                alert("❌ خطأ من الخادم: " + data.msg);
             }
-
             btn.innerText = oldText;
             btn.disabled = false;
-
-        })
-        .catch(() => {
-            alert("❌ خطأ في الاتصال");
-            btn.innerText = oldText;
-            btn.disabled = false;
-        });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("❌ حدث خطأ في الاتصال بالسيرفر. يرجى التأكد من الإنترنت والمحاولة.");
+        btn.innerText = oldText;
+        btn.disabled = false;
+    });
 }
