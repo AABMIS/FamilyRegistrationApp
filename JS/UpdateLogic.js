@@ -405,10 +405,8 @@ async function submitUpdates() {
         const result = await response.json();
 
         if (result.status === "success") {
-            alert("✅ تم إرسال طلب التعديل بنجاح.");
-            // تذكير بالمشكلة الموجودة في الباك-إند
-            alert("ملاحظة: حسب برمجة السيرفر الحالية، تم تحديث بيانات العائلة الأساسية فقط. (يرجى مراجعة الباك-إند لتحديث الكشوفات الفرعية).");
-            window.location.reload(); // إعادة تحميل الصفحة للبحث من جديد
+            alert("✅ تم تحديث بيانات العائلة بنجاح.");
+            window.location.reload();
         } else {
             throw new Error(result.msg || "فشل التحديث من السيرفر");
         }
