@@ -1,6 +1,14 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvOUbBDmHL6E0XBX_7d75jaF2n4TcAYPnj4akUU21Y-nwQFZ2pOg/exec";
 let originalData = {};
+// قفل التواريخ المستقبلية للحقول الثابتة عند تحميل الصفحة
+document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split("T")[0];
+    const husbandBirth = document.getElementById("husbandBirth");
+    const wifeBirth = document.getElementById("wifeBirth");
 
+    if (husbandBirth) husbandBirth.setAttribute("max", today);
+    if (wifeBirth) wifeBirth.setAttribute("max", today);
+});
 // ==========================================
 // 1️⃣ دوال مساعدة
 // ==========================================
@@ -22,7 +30,7 @@ function isValidId(id) {
 function toggleIllness(selectId, inputId) {
     const selectEl = typeof selectId === 'string' ? document.getElementById(selectId) : selectId;
     const inputEl = typeof inputId === 'string' ? document.getElementById(inputId) : inputId;
-    
+
     if (selectEl.value === "نعم") {
         inputEl.disabled = false;
         inputEl.required = true;
@@ -122,9 +130,9 @@ function populateForm(data) {
 
     document.getElementById("studentContainer").innerHTML = "";
     if (data.students) data.students.forEach(item => addStudentRow(item));
-    
+
     // إرجاع المستخدم للخطوة الأولى دائماً عند بحث جديد
-    for(let i=1; i<=5; i++) {
+    for (let i = 1; i <= 5; i++) {
         document.getElementById(`step${i}`).style.display = i === 1 ? "block" : "none";
     }
 }
@@ -135,9 +143,10 @@ function populateForm(data) {
 function addChildRow(data = {}) {
     const container = document.getElementById("childrenContainer");
     const div = document.createElement("div");
+    const today = new Date().toISOString().split("T")[0];
     div.className = "child-row";
     div.style.cssText = "border: 2px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
-    
+
     div.innerHTML = `
         <h4 style="margin-top:0; border-bottom:1px solid #ccc; padding-bottom:5px;">👤 بيانات الابن</h4>
         <label>الاسم رباعي:</label> <input type="text" class="cName" value="${data.name || ''}" required>
@@ -147,8 +156,7 @@ function addChildRow(data = {}) {
             <option value="ذكر" ${data.gender === 'ذكر' ? 'selected' : ''}>ذكر</option>
             <option value="أنثى" ${data.gender === 'أنثى' ? 'selected' : ''}>أنثى</option>
         </select>
-        <label>الميلاد:</label> <input type="date" class="cBirth" value="${data.birth || ''}" required>
-        <label>مريض؟:</label> 
+        <label>الميلاد:</label> <input type="date" class="cBirth" value="${data.birth || ''}" required max="${today}">        <label>مريض؟:</label> 
         <select class="cIll" required onchange="toggleIllness(this, this.nextElementSibling.nextElementSibling)">
             <option value="لا" ${data.ill === 'لا' ? 'selected' : ''}>لا</option>
             <option value="نعم" ${data.ill === 'نعم' ? 'selected' : ''}>نعم</option>
@@ -162,16 +170,17 @@ function addChildRow(data = {}) {
 function addInjuredRow(data = {}) {
     const container = document.getElementById("injuredContainer");
     const div = document.createElement("div");
+    const today = new Date().toISOString().split("T")[0];
     div.className = "injured-row";
     div.style.cssText = "border: 2px solid #ff9800; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
-    
+
     div.innerHTML = `
         <h4 style="margin-top:0; border-bottom:1px solid #ffcc80; padding-bottom:5px; color:#e65100;">🩹 بيانات المصاب</h4>
         <label>الاسم:</label> <input type="text" class="iName" value="${data.name || ''}" required>
         <label>الهوية:</label> <input type="text" class="iId" inputmode="numeric" value="${data.id || ''}" required>
         <label>الجوال:</label> <input type="text" class="iPhone" inputmode="numeric" value="${data.phone || ''}" required>
         <label>نوع الإصابة:</label> <input type="text" class="iType" value="${data.type || ''}" required>
-        <label>تاريخ الإصابة:</label> <input type="date" class="iDate" value="${data.date || ''}" required>
+       <label>تاريخ الإصابة:</label> <input type="date" class="iDate" value="${data.date || ''}" required max="${today}">
         <button type="button" class="btn-delete" onclick="this.parentElement.remove()" style="background:#ff4d4d; margin-top:10px;">🗑️ حذف</button>
     `;
     container.appendChild(div);
@@ -180,14 +189,15 @@ function addInjuredRow(data = {}) {
 function addMartyrRow(data = {}) {
     const container = document.getElementById("martyrsContainer");
     const div = document.createElement("div");
+    const today = new Date().toISOString().split("T")[0];
     div.className = "martyr-row";
     div.style.cssText = "border: 2px solid #9e9e9e; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
-    
+
     div.innerHTML = `
         <h4 style="margin-top:0; border-bottom:1px solid #bdbdbd; padding-bottom:5px; color:#424242;">🕊️ بيانات الشهيد</h4>
         <label>الاسم:</label> <input type="text" class="mName" value="${data.name || ''}" required>
         <label>الهوية:</label> <input type="text" class="mId" inputmode="numeric" value="${data.id || ''}" required>
-        <label>تاريخ الاستشهاد:</label> <input type="date" class="mDate" value="${data.date || ''}" required>
+        <label>تاريخ الاستشهاد:</label> <input type="date" class="mDate" value="${data.date || ''}" required max="${today}">
         <label>صلة القرابة:</label> 
         <select class="mRel" required>
             <option value="أب" ${data.rel === 'أب' ? 'selected' : ''}>أب</option>
@@ -207,7 +217,7 @@ function addStudentRow(data = {}) {
     const div = document.createElement("div");
     div.className = "student-row";
     div.style.cssText = "border: 2px solid #4CAF50; padding: 15px; margin-bottom: 15px; border-radius: 8px;";
-    
+
     div.innerHTML = `
         <h4 style="margin-top:0; border-bottom:1px solid #a5d6a7; padding-bottom:5px; color:#2e7d32;">🎓 بيانات الطالب</h4>
         <label>الاسم:</label> <input type="text" class="sName" value="${data.name || ''}" required>
@@ -238,11 +248,12 @@ function addStudentRow(data = {}) {
 // ==========================================
 function validateStep(stepNum) {
     const currentSection = document.getElementById(`step${stepNum}`);
+
+    // 1. فحص الحقول الفارغة
     const requiredInputs = currentSection.querySelectorAll("input[required], select[required]");
-    
     for (let input of requiredInputs) {
         if (input.value.trim() === "") {
-            alert("⚠️ يرجى تعبئة جميع الحقول الإجبارية قبل الانتقال للخطوة التالية.");
+            alert("⚠️ يرجى تعبئة جميع الحقول الإجبارية باللون الأحمر قبل الانتقال.");
             input.style.border = "2px solid red";
             input.scrollIntoView({ behavior: 'smooth', block: 'center' });
             input.focus();
@@ -252,11 +263,26 @@ function validateStep(stepNum) {
         }
     }
 
-    // فلديشن مخصص للخطوة الأولى (الأساسية)
+    // 2. 🔴 فحص التواريخ المستقبلية (الكود السحري)
+    const today = new Date().toISOString().split("T")[0];
+    const dateInputs = currentSection.querySelectorAll("input[type='date']");
+    for (let dateInput of dateInputs) {
+        if (dateInput.value && dateInput.value > today) {
+            alert("❌ خطأ: لا يمكن إدخال تاريخ في المستقبل!");
+            dateInput.style.border = "2px solid red";
+            dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            dateInput.focus();
+            return false;
+        } else {
+            dateInput.style.border = "";
+        }
+    }
+
+    // 3. فلديشن مخصص للخطوة الأولى (الأساسية)
     if (stepNum === 1) {
         const phone = getVal("phone");
         const wifeId = getVal("wifeId");
-        
+
         if (!/^05\d{8}$/.test(phone)) {
             alert("❌ رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام.");
             return false;
@@ -265,7 +291,7 @@ function validateStep(stepNum) {
             alert("❌ رقم هوية الزوجة غير صحيح.");
             return false;
         }
-        
+
         const total = Number(getVal("familyCount"));
         const male = Number(getVal("maleCount"));
         const female = Number(getVal("femaleCount"));
@@ -371,7 +397,7 @@ async function submitUpdates() {
         };
 
         const response = await fetch(SCRIPT_URL, {
-            method: "POST", 
+            method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" }, // تم التعديل لتجنب CORS
             body: JSON.stringify(payload)
         });

@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function toggleInjured() {
     const choice = document.getElementById("hasInjured").value;
     const section = document.getElementById("injuredSection");
-    
+
     if (choice === "yes") {
         section.style.display = "block";
         // إذا اختار نعم ولم يضف أحداً بعد، نضيف له بطاقة أولى تلقائياً
@@ -43,8 +43,8 @@ function addInjured() {
     injuredCount++;
 
     const container = document.getElementById("injuredContainer");
+    const today = new Date().toISOString().split("T")[0];
     const div = document.createElement("div");
-
     div.className = "injured-card";
     div.style.border = "2px solid #ff9800";
     div.style.padding = "20px";
@@ -68,7 +68,7 @@ function addInjured() {
         <input type="text" class="injuredType" required placeholder="مثال: شظايا في القدم اليمنى">
 
         <label>تاريخ الإصابة</label>
-        <input type="date" class="injuredDate" required>
+        <input type="date" class="injuredDate" required max="${today}>
 
         <button type="button" class="btn-delete" onclick="removeInjured(this)" style="background-color:#ff4d4d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; margin-top:15px;">🗑️ حذف المصاب</button>
     `;
@@ -95,7 +95,7 @@ function saveInjured() {
     }
 
     const choice = document.getElementById("hasInjured").value;
-    
+
     if (choice === "") {
         alert("⚠️ يرجى الإجابة على السؤال: هل يوجد مصابون؟");
         document.getElementById("hasInjured").focus();
@@ -122,7 +122,7 @@ function saveInjured() {
     // الفلديشن الصارم لكل مصاب
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        
+
         // التحقق من الحقول الفارغة
         const requiredInputs = card.querySelectorAll("input[required]");
         for (let input of requiredInputs) {
@@ -208,28 +208,28 @@ function saveInjured() {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
     })
-    .then(response => response.json())
-    .then(data => {
-        // فحص الردود بناءً على ملف Google Apps Script الخاص بك
-        if (data.status === "ok") {
-            // نجاح
-            window.location.href = "martyrs.html";
-        } else if (data.status === "error") {
-            if (data.msg === "DUPLICATE") {
-                alert("⚠️ خطأ: أحد المصابين الذين أدخلتهم مسجل مسبقاً في قاعدة البيانات!");
-            } else if (data.msg === "FAMILY_NOT_FOUND") {
-                alert("❌ خطأ: لم يتم العثور على العائلة الأساسية في قاعدة البيانات.");
-            } else {
-                alert("❌ خطأ من الخادم: " + data.msg);
+        .then(response => response.json())
+        .then(data => {
+            // فحص الردود بناءً على ملف Google Apps Script الخاص بك
+            if (data.status === "ok") {
+                // نجاح
+                window.location.href = "martyrs.html";
+            } else if (data.status === "error") {
+                if (data.msg === "DUPLICATE") {
+                    alert("⚠️ خطأ: أحد المصابين الذين أدخلتهم مسجل مسبقاً في قاعدة البيانات!");
+                } else if (data.msg === "FAMILY_NOT_FOUND") {
+                    alert("❌ خطأ: لم يتم العثور على العائلة الأساسية في قاعدة البيانات.");
+                } else {
+                    alert("❌ خطأ من الخادم: " + data.msg);
+                }
+                btn.innerText = oldText;
+                btn.disabled = false;
             }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("❌ حدث خطأ في الاتصال بالسيرفر. يرجى التأكد من الإنترنت والمحاولة.");
             btn.innerText = oldText;
             btn.disabled = false;
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alert("❌ حدث خطأ في الاتصال بالسيرفر. يرجى التأكد من الإنترنت والمحاولة.");
-        btn.innerText = oldText;
-        btn.disabled = false;
-    });
+        });
 }

@@ -1,6 +1,18 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxbbV0r7l0BYNDmdkvvOUbBDmHL6E0XBX_7d75jaF2n4TcAYPnj4akUU21Y-nwQFZ2pOg/exec";
 let idVerified = false;
+// بمجرد تحميل الصفحة، نقوم بقفل التواريخ المستقبلية
+document.addEventListener("DOMContentLoaded", () => {
+    // الحصول على تاريخ اليوم بصيغة YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
 
+    // تعيين الحد الأقصى لتاريخ ميلاد الزوج
+    const husbandBirth = document.getElementById("husbandBirth");
+    if (husbandBirth) husbandBirth.setAttribute("max", today);
+
+    // تعيين الحد الأقصى لتاريخ ميلاد الزوجة
+    const wifeBirth = document.getElementById("wifeBirth");
+    if (wifeBirth) wifeBirth.setAttribute("max", today);
+});
 // ==========================================
 // 1️⃣ دوال مساعدة (Helpers)
 // ==========================================
@@ -24,7 +36,7 @@ function isValidId(id) {
 function toggleIllnessType(selectId, inputId) {
     const selectEl = document.getElementById(selectId);
     const inputEl = document.getElementById(inputId);
-    
+
     if (selectEl.value === "نعم") {
         inputEl.disabled = false;
         inputEl.required = true;
@@ -86,7 +98,7 @@ async function checkId() {
                 message.textContent = "✅ الرقم مسموح له بالتسجيل، يرجى استكمال البيانات.";
                 message.style.color = "green";
                 idVerified = true;
-                
+
                 restForm.style.display = "block";
                 if (nextBtnDiv) nextBtnDiv.style.display = "block";
 
@@ -123,7 +135,7 @@ function validateAndGo() {
     }
 
     const restForm = document.getElementById("restForm");
-    
+
     // 1. فحص جميع الحقول التي تحمل وسم required
     const requiredInputs = restForm.querySelectorAll("input[required], select[required]");
     for (let input of requiredInputs) {

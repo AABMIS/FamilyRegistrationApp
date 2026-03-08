@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 2️⃣ دالة توليد بطاقة الابن (HTML ديناميكي)
 // ==========================================
 function createChildCard(index, container) {
+    const today = new Date().toISOString().split("T")[0];
     const div = document.createElement("div");
     div.className = "child-card";
     div.style.border = "2px solid #ddd";
@@ -66,7 +67,7 @@ function createChildCard(index, container) {
         </select>
 
         <label>تاريخ الميلاد</label>
-        <input type="date" class="childBirth" required>
+        <input type="date" class="childBirth" required max="${today}>
 
         <label>هل يعاني من أمراض مزمنة أو إعاقة؟</label>
         <select class="childIll" required onchange="toggleChildIllness(this)">

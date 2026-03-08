@@ -43,6 +43,7 @@ function addMartyr() {
     martyrCount++;
 
     const container = document.getElementById("martyrsContainer");
+    const today = new Date().toISOString().split("T")[0];
     const div = document.createElement("div");
     div.className = "martyr-card";
     div.style.border = "2px solid #9e9e9e";
@@ -61,7 +62,7 @@ function addMartyr() {
         <input type="text" class="mId" placeholder="9 أرقام" inputmode="numeric" required>
 
         <label>تاريخ الاستشهاد</label>
-        <input type="date" class="mDate" required>
+        <input type="date" class="mDate" required max="${today}>
 
         <label>صلة القرابة برب الأسرة</label>
         <select class="mRel" required>
