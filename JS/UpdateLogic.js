@@ -385,7 +385,54 @@ async function submitUpdates() {
             level: row.querySelector(".sLevel").value,
             univ: row.querySelector(".sUniv").value
         }));
+        // ===============================================
+        // 🔴 الفحص الذكي للتعارض بين الأقسام (Business Logic)
+        // ===============================================
+        const hId = husbandData.husbandId;
+        const wId = husbandData.wifeId;
+        const cIds = children.map(c => c.id).filter(id => id !== "");
+        const iIds = injured.map(i => i.id).filter(id => id !== "");
+        const mIds = martyrs.map(m => m.id).filter(id => id !== "");
+        const sIds = students.map(s => s.id).filter(id => id !== "");
 
+        // دالة مساعدة لاكتشاف التقاطع (رقم موجود في الكشفين)
+        const getOverlap = (arr1, arr2) => arr1.find(id => arr2.includes(id));
+
+        // 1. منع تكرار نفس الهوية داخل الكشف الواحد
+        const hasDup = (arr) => new Set(arr).size !== arr.length;
+        if (hasDup([hId, wId]) || hasDup(cIds) || hasDup(iIds) || hasDup(mIds) || hasDup(sIds)) {
+            alert("❌ خطأ: يوجد تكرار في رقم الهوية داخل نفس الكشف.\nيرجى مراجعة الأرقام المدخلة وحذف التكرار.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        // 2. منع التقاطع بين (الشهداء) و (المصابين)
+        const martyrInjured = getOverlap(mIds, iIds);
+        if (martyrInjured) {
+            alert(`❌ تعارض: الهوية (${martyrInjured}) مسجلة في كشف "المصابين" وفي كشف "الشهداء" معاً!\nيرجى حذفها من أحد الكشفين لتتمكن من الحفظ.`);
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        // 3. منع التقاطع بين (الشهداء) و (الطلاب)
+        const martyrStudent = getOverlap(mIds, sIds);
+        if (martyrStudent) {
+            alert(`❌ تعارض: الهوية (${martyrStudent}) مسجلة كـ "شهيد"، ولا يمكن تسجيلها في كشف "الطلاب" في نفس الوقت!`);
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        // 4. منع استخدام هوية الأب أو الأم لأحد الأبناء
+        if (cIds.includes(hId) || cIds.includes(wId)) {
+            alert(`❌ تعارض: لا يمكن استخدام هوية الزوج أو الزوجة ووضعها لأحد الأبناء!`);
+            btn.innerText = originalText;
+            btn.disabled = false;
+            return;
+        }
+        // ===============================================
         const payload = {
             action: "updateAll",
             husbandId: husbandData.husbandId,
